@@ -259,6 +259,11 @@ async function initDatabase() {
     }
   }
 
+  // === 数据迁移：学历要求统一为本科及以上 ===
+  console.log('🎓 统一学历要求为本科及以上...');
+  run("UPDATE jobs SET education = '本科及以上' WHERE education IN ('高中', '大专', '本科', '硕士', '博士')");
+  console.log('✅ 学历要求已更新');
+
   // === 数据迁移：用搜索验证过的真实招聘链接更新 source_url ===
   // 无条件覆盖，确保链接始终可用
   console.log('🔄 更新 source_url 为验证过的真实链接...');
