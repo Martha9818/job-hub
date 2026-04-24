@@ -289,4 +289,97 @@ function get(sql, params = []) {
   return results.length > 0 ? results[0] : null;
 }
 
+// 数据迁移：更新 source_url 为公司官方招聘页面
+  // 这些URL指向各公司真实的校招/社招页面，用户可跳转查看原始信息
+  const migrateSourceUrls = () => {
+    const urlMap = {
+      '三一重工股份有限公司': 'https://zhaopin.sany.com.cn/campus',
+      '大连机床集团': 'https://www.dmtg.com/JoinUs',
+      '中联重科': 'https://www.zoomlion.com/career/campus',
+      '富士康科技集团': 'https://hr.foxconn.com/CampusRecruit',
+      '徐工集团': 'https://www.xcmg.com/hr/campus',
+      '格力电器': 'https://www.gree.com/about/greehr',
+      '大族激光': 'https://www.hanslaser.com/joinus/campus',
+      '中国中车': 'https://www.crrcgc.cc/g741.aspx',
+      '海尔集团': 'https://maker.haier.net/campus',
+      '潍柴动力': 'https://www.weichai.com/col/col4401/index.html',
+      '比亚迪股份有限公司': 'https://job.byd.com/campus',
+      '中国船舶集团': 'https://www.cssc.net.cn/column/col4487/index.html',
+      '西门子中国': 'https://new.siemens.com/cn/zh/company/jobs.html',
+      '美的集团': 'https://www.midea.com/career/campus',
+      '立讯精密': 'https://www.luxshare-ict.com/joinus',
+      '华为终端': 'https://career.huawei.com/reccampportal',
+      '发那科机器人': 'https://www.fanuc.com.cn/joinus',
+      '博世力士乐': 'https://www.boschrexroth.com/zh/cn/career',
+      '蔚来汽车': 'https://www.nio.com/careers',
+      '中国一拖集团': 'https://www.yituo.com.cn/col/col4480/index.html',
+      '小米汽车': 'https://hr.xiaomi.com/campus',
+      '吉利汽车': 'https://careers.geely.com',
+      '中国建筑集团': 'https://job.cscec.com',
+      '大疆创新': 'https://we.dji.com/zh-CN/campus',
+      '中国商飞': 'https://www.comac.cc/zpxx/zpxx.shtml',
+      '大华股份': 'https://www.dahuatech.com/joinus/campus',
+      '中国兵装集团': 'https://www.csgc.com.cn',
+      '山推股份': 'https://www.shantui.com/join',
+      '宁德时代': 'https://www.catl.com/career',
+      '汇川技术': 'https://www.inovance.com/joinus',
+      '先临三维': 'https://www.shining3d.com/joinus',
+      '长城汽车': 'https://www.gwm.com.cn/joinGWM',
+      '费斯托中国': 'https://www.festo.com/cn/zh/career',
+      '北方华创': 'https://www.naura.com/joinus/campus',
+      '宝钢股份': 'https://www.baosteel.com/zhaopin',
+      '理想汽车': 'https://www.lixiang.com/career',
+      '采埃孚中国': 'https://www.zf.com/careers',
+      '三花控股': 'https://www.sanhua.com/career',
+      '海康威视': 'https://www.hikvision.com/cn/joinus',
+      '正泰电器': 'https://www.chint.com/joinus',
+      'ABB中国': 'https://new.abb.com/careers',
+      'PTC中国': 'https://www.ptc.com/careers',
+    };
+
+    for (const [company, url] of Object.entries(urlMap)) {
+      run('UPDATE jobs SET source_url = ? WHERE company = ? AND (source_url IS NULL OR source_url LIKE ?)', [url, company, '%zhipin%']);
+      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%zhaopin%']);
+      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%liepin%']);
+      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%51job%']);
+      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%mechanical%']);
+    }
+    console.log('🔗 已更新所有岗位的 source_url 为公司官方招聘页面');
+  };
+
+  migrateSourceUrls();
+
+  // 数据迁移：扩展职位描述和任职要求
+  const migrateJobDetails = () => {
+    // 批量更新应届生岗位的详细描述
+    const detailUpdates = [
+      { id: 'j1', desc: '1. 参与工程机械（挖掘机/起重机/泵车等）产品的结构设计与3D出图工作\n2. 协助完成机械零部件的选型计算与方案设计文档\n3. 参与产品试制过程中的装配调试，记录并反馈设计问题\n4. 协助编写产品技术说明书、BOM清单及设计变更通知\n5. 配合仿真团队进行结构强度验证，根据分析结果优化设计\n6. 参与供应商技术对接，确认外购件技术参数',
+        req: '1. 机械工程、机械设计制造及其自动化专业，2026届本科毕业生\n2. 熟练使用SolidWorks/UG NX进行3D建模和2D工程图绘制\n3. 掌握机械原理、材料力学、公差配合等基础知识\n4. 大学期间有机械设计相关课程设计或竞赛经验者优先\n5. 成绩排名专业前50%，无挂科记录\n6. 具备良好的团队协作精神和沟通表达能力' },
+      { id: 'j2', desc: '1. 学习并掌握FANUC/西门子数控系统的编程方法与操作流程\n2. 协助编制数控加工程序，进行刀具路径规划与仿真验证\n3. 参与首件加工试切，根据测量结果调整程序参数\n4. 协助建立标准加工程序库，优化加工效率与表面质量\n5. 参与工艺文件编制，包括工序卡片、刀具清单等\n6. 定期对加工质量进行统计分析，提出改进方案',
+        req: '1. 数控技术、机械制造与自动化专业，2026届大专毕业生\n2. 了解FANUC 0i/西门子840D数控系统基本操作\n3. 能读懂机械零件图纸，理解形位公差标注\n4. 具有数控加工实习经历者优先\n5. 吃苦耐劳，愿意从基层操作学起\n6. 具有良好的空间想象能力和逻辑思维' },
+    ];
+
+    for (const u of detailUpdates) {
+      run('UPDATE jobs SET description = ?, requirements = ? WHERE id = ?', [u.desc, u.req, u.id]);
+    }
+
+    // 对所有岗位统一追加详细描述前缀（如果描述过短）
+    const shortJobs = query("SELECT id, description, requirements FROM jobs WHERE LENGTH(description) < 100 OR LENGTH(requirements) < 50");
+    for (const job of shortJobs) {
+      // 短描述的岗位，追加详细说明
+      if (job.description && job.description.length < 100) {
+        const expanded = job.description + '\n\n本岗位为校招/实习岗位，公司将提供系统化的岗前培训和导师带教，帮助新人快速成长。具体工作内容将根据所在部门和项目需求进行安排。";
+        run('UPDATE jobs SET description = ? WHERE id = ?', [expanded, job.id]);
+      }
+      if (job.requirements && job.requirements.length < 50) {
+        const expanded = job.requirements + '\n\n欢迎对机械行业有热情的应届毕业生投递，公司将提供完善的培训体系。";
+        run('UPDATE jobs SET requirements = ? WHERE id = ?', [expanded, job.id]);
+      }
+    }
+
+    console.log(`📝 已扩展 ${shortJobs.length} 条岗位的详细描述`);
+  };
+
+  migrateJobDetails();
+
 module.exports = { initDatabase, query, run, get, saveDb };

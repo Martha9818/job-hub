@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/apply" element={<ProtectedRoute><ApplyPage /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
+          <Footer />
         </main>
       </div>
     </AuthProvider>

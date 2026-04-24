@@ -85,21 +85,30 @@ export default function JobDetailPage() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">
+          {job.source_url && (
+            <a href={job.source_url} target="_blank" rel="noopener noreferrer"
+              className="btn-primary btn-lg rounded-xl text-center">
+              🔗 查看原始招聘页面
+            </a>
+          )}
           {user ? (
-            <Link to="/apply" className="btn-primary btn-lg rounded-xl text-center">
+            <Link to="/apply" className="btn-secondary btn-lg rounded-xl text-center">
               🚀 立即投递
             </Link>
           ) : (
-            <Link to="/login" className="btn-primary btn-lg rounded-xl text-center">
+            <Link to="/login" className="btn-secondary btn-lg rounded-xl text-center">
               登录后投递
             </Link>
           )}
-          {job.source_url && (
-            <a href={job.source_url} target="_blank" rel="noopener noreferrer"
-              className="btn-secondary btn-lg rounded-xl text-center">
-              查看原始页面 →
-            </a>
-          )}
+        </div>
+
+        {/* 合规声明 */}
+        <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            ⚖️ <strong>免责声明</strong>：本页面信息来源于公开渠道聚合，仅供参考。薪资、岗位要求等信息以原始发布页面为准。
+            请前往原始招聘页面核实信息并投递。本平台不对信息准确性、完整性或时效性承担责任。
+            如发现信息有误，请及时反馈。
+          </p>
         </div>
       </div>
 
