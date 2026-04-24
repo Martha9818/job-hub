@@ -338,46 +338,37 @@ function get(sql, params = []) {
     };
 
     for (const [company, url] of Object.entries(urlMap)) {
-      run('UPDATE jobs SET source_url = ? WHERE company = ? AND (source_url IS NULL OR source_url LIKE ?)', [url, company, '%zhipin%']);
-      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%zhaopin%']);
-      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%liepin%']);
-      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%51job%']);
-      run('UPDATE jobs SET source_url = ? WHERE company = ? AND source_url LIKE ?', [url, company, '%mechanical%']);
+      run('UPDATE jobs SET source_url = ? WHERE company = ?', [url, company]);
     }
     console.log('🔗 已更新所有岗位的 source_url 为公司官方招聘页面');
   };
 
   migrateSourceUrls();
 
-  // 数据迁移：扩展职位描述和任职要求
+  // 数据迁移：扩展职位描述和任职要求（为所有短描述岗位追加详细内容）
   const migrateJobDetails = () => {
-    // 批量更新应届生岗位的详细描述
-    const detailUpdates = [
-      { id: 'j1', desc: '1. 参与工程机械（挖掘机/起重机/泵车等）产品的结构设计与3D出图工作\n2. 协助完成机械零部件的选型计算与方案设计文档\n3. 参与产品试制过程中的装配调试，记录并反馈设计问题\n4. 协助编写产品技术说明书、BOM清单及设计变更通知\n5. 配合仿真团队进行结构强度验证，根据分析结果优化设计\n6. 参与供应商技术对接，确认外购件技术参数',
-        req: '1. 机械工程、机械设计制造及其自动化专业，2026届本科毕业生\n2. 熟练使用SolidWorks/UG NX进行3D建模和2D工程图绘制\n3. 掌握机械原理、材料力学、公差配合等基础知识\n4. 大学期间有机械设计相关课程设计或竞赛经验者优先\n5. 成绩排名专业前50%，无挂科记录\n6. 具备良好的团队协作精神和沟通表达能力' },
-      { id: 'j2', desc: '1. 学习并掌握FANUC/西门子数控系统的编程方法与操作流程\n2. 协助编制数控加工程序，进行刀具路径规划与仿真验证\n3. 参与首件加工试切，根据测量结果调整程序参数\n4. 协助建立标准加工程序库，优化加工效率与表面质量\n5. 参与工艺文件编制，包括工序卡片、刀具清单等\n6. 定期对加工质量进行统计分析，提出改进方案',
-        req: '1. 数控技术、机械制造与自动化专业，2026届大专毕业生\n2. 了解FANUC 0i/西门子840D数控系统基本操作\n3. 能读懂机械零件图纸，理解形位公差标注\n4. 具有数控加工实习经历者优先\n5. 吃苦耐劳，愿意从基层操作学起\n6. 具有良好的空间想象能力和逻辑思维' },
-    ];
-
-    for (const u of detailUpdates) {
-      run('UPDATE jobs SET description = ?, requirements = ? WHERE id = ?', [u.desc, u.req, u.id]);
-    }
-
-    // 对所有岗位统一追加详细描述前缀（如果描述过短）
-    const shortJobs = query("SELECT id, description, requirements FROM jobs WHERE LENGTH(description) < 100 OR LENGTH(requirements) < 50");
+    const shortJobs = query("SELECT id, description, requirements, experience, title FROM jobs WHERE LENGTH(description) < 150");
+    let updated = 0;
     for (const job of shortJobs) {
-      // 短描述的岗位，追加详细说明
-      if (job.description && job.description.length < 100) {
-        const expanded = job.description + '\n\n本岗位为校招/实习岗位，公司将提供系统化的岗前培训和导师带教，帮助新人快速成长。具体工作内容将根据所在部门和项目需求进行安排。";
-        run('UPDATE jobs SET description = ? WHERE id = ?', [expanded, job.id]);
-      }
-      if (job.requirements && job.requirements.length < 50) {
-        const expanded = job.requirements + '\n\n欢迎对机械行业有热情的应届毕业生投递，公司将提供完善的培训体系。";
-        run('UPDATE jobs SET requirements = ? WHERE id = ?', [expanded, job.id]);
-      }
-    }
+      // 根据经验类型生成详细描述
+      const isIntern = job.experience === '实习';
+      const isFresh = job.experience === '应届生';
+      const prefix = isIntern ? '实习' : (isFresh ? '校招' : '');
 
-    console.log(`📝 已扩展 ${shortJobs.length} 条岗位的详细描述`);
+      const expandedDesc = job.description + '\n\n' +
+        (isIntern || isFresh ?
+          `${prefix}岗位说明：\n1. 公司将提供系统化的岗前培训和导师带教，帮助新人快速融入团队\n2. 具体工作内容将根据所在部门项目需求灵活安排，覆盖设计/工艺/测试/现场等环节\n3. 表现优异者可获得转正机会，职业发展通道清晰\n4. 提供行业领先的实践平台，接触前沿产品和技术` :
+          `岗位职责补充：\n1. 负责相关技术方案的制定与评审，确保设计质量\n2. 参与跨部门协作，推动项目按时交付\n3. 持续优化现有产品和工艺，提升性能和效率\n4. 指导初级工程师，分享专业经验`);
+
+      const expandedReq = job.requirements + '\n\n' +
+        (isIntern || isFresh ?
+          `附加要求：\n1. 学习能力强，能在短期内掌握岗位所需技能\n2. 具备良好的团队协作精神和沟通表达能力\n3. 对机械行业有热情，愿意长期深耕` :
+          `附加要求：\n1. 具有出色的项目管理和技术决策能力\n2. 良好的跨部门沟通协调能力\n3. 能在快节奏环境下高效工作`);
+
+      run('UPDATE jobs SET description = ?, requirements = ? WHERE id = ?', [expandedDesc, expandedReq, job.id]);
+      updated++;
+    }
+    console.log(`📝 已扩展 ${updated} 条岗位的详细描述`);
   };
 
   migrateJobDetails();
