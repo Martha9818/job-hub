@@ -85,6 +85,22 @@ app.post('/api/scheduler/run-now', async (req, res) => {
   }
 });
 
+// 根路径欢迎页
+app.get('/', (req, res) => {
+  res.json({
+    name: 'JobHub API',
+    description: '机械行业招聘信息聚合平台',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      jobs: '/api/jobs',
+      auth: '/api/auth/login',
+      scraper: '/api/scraper/status',
+      compliance: '/api/scraper/compliance',
+    },
+  });
+});
+
 // 健康检查
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 app.get('/ready', (req, res) => {
