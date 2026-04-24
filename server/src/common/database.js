@@ -372,5 +372,6 @@ function get(sql, params = []) {
   };
 
   migrateJobDetails();
+  saveDb(); // 确保迁移结果立即写入磁盘
 
 module.exports = { initDatabase, query, run, get, saveDb };
