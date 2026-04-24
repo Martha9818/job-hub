@@ -1,0 +1,154 @@
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { apiClient } from '../lib/api';
+import { useFavorites } from '../hooks/useFavorites';
+
+export default function JobsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [jobs, setJobs] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, total: 0, total_pages: 0 });
+  const [filters, setFilters] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { isFavorite, toggleFavorite } = useFavorites();
+
+  const keyword = searchParams.get('keyword') || '';
+  const location = searchParams.get('location') || '';
+  const industry = searchParams.get('industry') || '';
+  const category = searchParams.get('category') || '';
+  const salaryMin = searchParams.get('salary_min') || '';
+  const sort = searchParams.get('sort') || 'latest';
+  const page = parseInt(searchParams.get('page') || '1');
+
+  useEffect(() => {
+    apiClient.get('/jobs/meta/filters').then(res => setFilters(res.data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (keyword) params.set('keyword', keyword);
+    if (location) params.set('location', location);
+    if (industry) params.set('industry', industry);
+    if (category) params.set('category', category);
+    if (salaryMin) params.set('salary_min', salaryMin);
+    if (sort !== 'latest') params.set('sort', sort);
+    params.set('page', page);
+
+    apiClient.get(`/jobs?${params.toString()}`)
+      .then(res => {
+        setJobs(res.data || []);
+        setPagination(res.pagination || {});
+      })
+      .catch(() => setJobs([]))
+      .finally(() => setLoading(false));
+  }, [keyword, location, industry, category, salaryMin, sort, page]);
+
+  const updateSearch = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) { params.set(key, value); } else { params.delete(key); }
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">岗位搜索</h1>
+        {pagination.total > 0 && (
+          <span className="text-sm text-gray-500">共 {pagination.total} 个岗位</span>
+        )}
+      </div>
+
+      {/* 搜索栏 */}
+      <div className="card p-4 mb-6">
+        <div className="flex flex-wrap gap-3">
+          <input
+            type="text" defaultValue={keyword} placeholder="搜索岗位名称、公司名..."
+            className="input flex-1 min-w-[200px]"
+            onKeyDown={e => { if (e.key === 'Enter') updateSearch('keyword', e.target.value); }}
+          />
+          <select value={location} onChange={e => updateSearch('location', e.target.value)} className="select w-auto">
+            <option value="">全部地区</option>
+            {filters?.locations?.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
+          <select value={category} onChange={e => updateSearch('category', e.target.value)} className="select w-auto">
+            <option value="">全部类别</option>
+            {filters?.categories?.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={salaryMin} onChange={e => updateSearch('salary_min', e.target.value)} className="select w-auto">
+            <option value="">薪资不限</option>
+            <option value="5000">5K以上</option>
+            <option value="10000">10K以上</option>
+            <option value="15000">15K以上</option>
+            <option value="20000">20K以上</option>
+            <option value="30000">30K以上</option>
+          </select>
+          <select value={sort} onChange={e => updateSearch('sort', e.target.value)} className="select w-auto">
+            <option value="latest">最新发布</option>
+            <option value="salary_high">薪资最高</option>
+            <option value="salary_low">薪资最低</option>
+          </select>
+        </div>
+      </div>
+
+      {/* 结果列表 */}
+      {loading ? (
+        <div className="text-center py-20 text-gray-400">加载中...</div>
+      ) : jobs.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">🔍</div>
+          <p className="empty-state-text">暂无匹配岗位，试试调整搜索条件</p>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-3">
+            {jobs.map(job => (
+              <div key={job.id}
+                className="card-interactive p-4 md:p-5 flex items-start gap-3 animate-slide-up">
+                <Link to={`/jobs/${job.id}`} className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 truncate">{job.title}</h3>
+                      <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
+                      <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500">
+                        {job.location && <span>📍 {job.location}</span>}
+                        {job.experience && <span>📋 {job.experience}</span>}
+                        {job.education && <span>🎓 {job.education}</span>}
+                        {job.industry && <span className="badge-primary">{job.industry}</span>}
+                      </div>
+                    </div>
+                    <div className="text-left md:text-right shrink-0">
+                      <div className="text-lg font-bold text-red-500">{job.salary_text || '面议'}</div>
+                      {job.source_name && <div className="text-xs text-gray-400 mt-1">来源: {job.source_name}</div>}
+                    </div>
+                  </div>
+                </Link>
+                <button
+                  onClick={(e) => { e.preventDefault(); toggleFavorite(job.id); }}
+                  className="shrink-0 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={isFavorite(job.id) ? '取消收藏' : '收藏'}>
+                  {isFavorite(job.id) ? (
+                    <span className="text-red-500 text-lg">❤️</span>
+                  ) : (
+                    <span className="text-gray-300 text-lg hover:text-red-400">🤍</span>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* 分页 */}
+          {pagination.total_pages > 1 && (
+            <div className="flex justify-center gap-2 mt-8">
+              <button disabled={page <= 1} onClick={() => updateSearch('page', String(page - 1))}
+                className="btn-secondary btn-sm disabled:opacity-40">上一页</button>
+              <span className="px-4 py-2 text-gray-500 text-sm">{page} / {pagination.total_pages}</span>
+              <button disabled={page >= pagination.total_pages} onClick={() => updateSearch('page', String(page + 1))}
+                className="btn-secondary btn-sm disabled:opacity-40">下一页</button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

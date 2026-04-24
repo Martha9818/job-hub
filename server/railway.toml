@@ -1,0 +1,19 @@
+[build]
+builder = "nixpacks"
+
+[build.nixpacks]
+nodeVersion = "20"
+
+[deploy]
+startCommand = "node src/index.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+
+[[deploy.env]]
+name = "NODE_ENV"
+value = "production"
+
+[[deploy.env]]
+name = "ENABLE_SCHEDULER"
+value = "false"

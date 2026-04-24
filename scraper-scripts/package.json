@@ -1,0 +1,13 @@
+{
+  "name": "job-hub-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "scrape:boss": "node scraper-stealth.js --source=boss",
+    "scrape:zhilian": "node scraper-stealth.js --source=zhilian",
+    "scrape:liepin": "node scraper-stealth.js --source=liepin"
+  },
+  "dependencies": {
+    "playwright": "^1.41.0"
+  }
+}
