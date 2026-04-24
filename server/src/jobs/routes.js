@@ -70,4 +70,93 @@ router.get('/meta/stats', (req, res) => {
   res.json({ data: { totalJobs, totalCompanies, mechanicalJobs, todayJobs } });
 });
 
+// 手动触发数据迁移（管理员用）
+router.post('/migrate', (req, res) => {
+  try {
+    const { query: q, run: r, saveDb: s } = require('../common/database');
+
+    const urlMap = {
+      '三一重工股份有限公司': 'https://zhaopin.sany.com.cn/campus',
+      '大连机床集团': 'https://www.dmtg.com/JoinUs',
+      '中联重科': 'https://www.zoomlion.com/career/campus',
+      '富士康科技集团': 'https://hr.foxconn.com/CampusRecruit',
+      '徐工集团': 'https://www.xcmg.com/hr/campus',
+      '格力电器': 'https://www.gree.com/about/greehr',
+      '大族激光': 'https://www.hanslaser.com/joinus/campus',
+      '中国中车': 'https://www.crrcgc.cc/g741.aspx',
+      '海尔集团': 'https://maker.haier.net/campus',
+      '潍柴动力': 'https://www.weichai.com/col/col4401/index.html',
+      '比亚迪股份有限公司': 'https://job.byd.com/campus',
+      '中国船舶集团': 'https://www.cssc.net.cn/column/col4487/index.html',
+      '西门子中国': 'https://new.siemens.com/cn/zh/company/jobs.html',
+      '美的集团': 'https://www.midea.com/career/campus',
+      '立讯精密': 'https://www.luxshare-ict.com/joinus',
+      '华为终端': 'https://career.huawei.com/reccampportal',
+      '发那科机器人': 'https://www.fanuc.com.cn/joinus',
+      '博世力士乐': 'https://www.boschrexroth.com/zh/cn/career',
+      '蔚来汽车': 'https://www.nio.com/careers',
+      '中国一拖集团': 'https://www.yituo.com.cn/col/col4480/index.html',
+      '小米汽车': 'https://hr.xiaomi.com/campus',
+      '吉利汽车': 'https://careers.geely.com',
+      '中国建筑集团': 'https://job.cscec.com',
+      '大疆创新': 'https://we.dji.com/zh-CN/campus',
+      '中国商飞': 'https://www.comac.cc/zpxx/zpxx.shtml',
+      '大华股份': 'https://www.dahuatech.com/joinus/campus',
+      '中国兵装集团': 'https://www.csgc.com.cn',
+      '山推股份': 'https://www.shantui.com/join',
+      '宁德时代': 'https://www.catl.com/career',
+      '汇川技术': 'https://www.inovance.com/joinus',
+      '先临三维': 'https://www.shining3d.com/joinus',
+      '长城汽车': 'https://www.gwm.com.cn/joinGWM',
+      '费斯托中国': 'https://www.festo.com/cn/zh/career',
+      '北方华创': 'https://www.naura.com/joinus/campus',
+      '宝钢股份': 'https://www.baosteel.com/zhaopin',
+      '理想汽车': 'https://www.lixiang.com/career',
+      '采埃孚中国': 'https://www.zf.com/careers',
+      '三花控股': 'https://www.sanhua.com/career',
+      '海康威视': 'https://www.hikvision.com/cn/joinus',
+      '正泰电器': 'https://www.chint.com/joinus',
+      'ABB中国': 'https://new.abb.com/careers',
+      'PTC中国': 'https://www.ptc.com/careers',
+    };
+
+    let urlUpdated = 0;
+    for (const [company, url] of Object.entries(urlMap)) {
+      r('UPDATE jobs SET source_url = ? WHERE company = ?', [url, company]);
+      urlUpdated++;
+    }
+
+    // 扩展短描述
+    const shortJobs = q("SELECT id, description, requirements, experience FROM jobs WHERE LENGTH(description) < 150");
+    let descUpdated = 0;
+    for (const job of shortJobs) {
+      const isIntern = job.experience === '实习';
+      const isFresh = job.experience === '应届生';
+
+      const expandedDesc = job.description + '\n\n' +
+        (isIntern || isFresh ?
+          `${isIntern ? '实习' : '校招'}岗位说明：\n1. 公司将提供系统化的岗前培训和导师带教\n2. 具体工作内容将根据项目需求灵活安排\n3. 表现优异者可获得转正机会\n4. 提供行业领先的实践平台` :
+          `岗位职责补充：\n1. 负责技术方案制定与评审\n2. 参与跨部门协作推动项目交付\n3. 持续优化产品和工艺\n4. 指导初级工程师`);
+
+      const expandedReq = job.requirements + '\n\n' +
+        (isIntern || isFresh ?
+          `附加要求：\n1. 学习能力强，能短期内掌握岗位技能\n2. 团队协作精神和沟通表达能力\n3. 对机械行业有热情` :
+          `附加要求：\n1. 项目管理和技术决策能力\n2. 跨部门沟通协调能力\n3. 快节奏环境下高效工作`);
+
+      r('UPDATE jobs SET description = ?, requirements = ? WHERE id = ?', [expandedDesc, expandedReq, job.id]);
+      descUpdated++;
+    }
+
+    s();
+
+    res.json({
+      message: '数据迁移完成',
+      urls_updated: urlUpdated,
+      descriptions_expanded: descUpdated,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
