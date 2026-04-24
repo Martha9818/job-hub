@@ -43,6 +43,8 @@ app.use(cors({
     process.env.FRONTEND_URL,
     // Vercel 预览和正式域名
     /^https:\/\/[a-z0-9-]+\.vercel\.app$/,
+    // Render 静态站点域名
+    /^https:\/\/[a-z0-9-]+\.onrender\.com$/,
   ].filter(Boolean),
   credentials: true,
 }));
