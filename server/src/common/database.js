@@ -289,89 +289,95 @@ function get(sql, params = []) {
   return results.length > 0 ? results[0] : null;
 }
 
-// 数据迁移：更新 source_url 为公司官方招聘页面
-  // 这些URL指向各公司真实的校招/社招页面，用户可跳转查看原始信息
-  const migrateSourceUrls = () => {
-    const urlMap = {
-      '三一重工股份有限公司': 'https://zhaopin.sany.com.cn/campus',
-      '大连机床集团': 'https://www.dmtg.com/JoinUs',
-      '中联重科': 'https://www.zoomlion.com/career/campus',
-      '富士康科技集团': 'https://hr.foxconn.com/CampusRecruit',
-      '徐工集团': 'https://www.xcmg.com/hr/campus',
-      '格力电器': 'https://www.gree.com/about/greehr',
-      '大族激光': 'https://www.hanslaser.com/joinus/campus',
-      '中国中车': 'https://www.crrcgc.cc/g741.aspx',
-      '海尔集团': 'https://maker.haier.net/campus',
-      '潍柴动力': 'https://www.weichai.com/col/col4401/index.html',
-      '比亚迪股份有限公司': 'https://job.byd.com/campus',
-      '中国船舶集团': 'https://www.cssc.net.cn/column/col4487/index.html',
-      '西门子中国': 'https://new.siemens.com/cn/zh/company/jobs.html',
-      '美的集团': 'https://www.midea.com/career/campus',
-      '立讯精密': 'https://www.luxshare-ict.com/joinus',
-      '华为终端': 'https://career.huawei.com/reccampportal',
-      '发那科机器人': 'https://www.fanuc.com.cn/joinus',
-      '博世力士乐': 'https://www.boschrexroth.com/zh/cn/career',
-      '蔚来汽车': 'https://www.nio.com/careers',
-      '中国一拖集团': 'https://www.yituo.com.cn/col/col4480/index.html',
-      '小米汽车': 'https://hr.xiaomi.com/campus',
-      '吉利汽车': 'https://careers.geely.com',
-      '中国建筑集团': 'https://job.cscec.com',
-      '大疆创新': 'https://we.dji.com/zh-CN/campus',
-      '中国商飞': 'https://www.comac.cc/zpxx/zpxx.shtml',
-      '大华股份': 'https://www.dahuatech.com/joinus/campus',
-      '中国兵装集团': 'https://www.csgc.com.cn',
-      '山推股份': 'https://www.shantui.com/join',
-      '宁德时代': 'https://www.catl.com/career',
-      '汇川技术': 'https://www.inovance.com/joinus',
-      '先临三维': 'https://www.shining3d.com/joinus',
-      '长城汽车': 'https://www.gwm.com.cn/joinGWM',
-      '费斯托中国': 'https://www.festo.com/cn/zh/career',
-      '北方华创': 'https://www.naura.com/joinus/campus',
-      '宝钢股份': 'https://www.baosteel.com/zhaopin',
-      '理想汽车': 'https://www.lixiang.com/career',
-      '采埃孚中国': 'https://www.zf.com/careers',
-      '三花控股': 'https://www.sanhua.com/career',
-      '海康威视': 'https://www.hikvision.com/cn/joinus',
-      '正泰电器': 'https://www.chint.com/joinus',
-      'ABB中国': 'https://new.abb.com/careers',
-      'PTC中国': 'https://www.ptc.com/careers',
-    };
+  // 强制数据迁移：每次启动时检查并更新
+  const migrateV2 = () => {
+    // 检查是否需要迁移：看 j1 的 source_url 是否还是旧的
+    const checkJob = get('SELECT source_url FROM jobs WHERE id = ?', ['j1']);
+    if (checkJob && checkJob.source_url && checkJob.source_url.includes('zhipin.com/job_detail/')) {
+      console.log('🔄 检测到旧版 source_url，开始迁移...');
 
-    for (const [company, url] of Object.entries(urlMap)) {
-      run('UPDATE jobs SET source_url = ? WHERE company = ?', [url, company]);
+      const urlMap = {
+        '三一重工股份有限公司': 'https://zhaopin.sany.com.cn/campus',
+        '大连机床集团': 'https://www.dmtg.com/JoinUs',
+        '中联重科': 'https://www.zoomlion.com/career/campus',
+        '富士康科技集团': 'https://hr.foxconn.com/CampusRecruit',
+        '徐工集团': 'https://www.xcmg.com/hr/campus',
+        '格力电器': 'https://www.gree.com/about/greehr',
+        '大族激光': 'https://www.hanslaser.com/joinus/campus',
+        '中国中车': 'https://www.crrcgc.cc/g741.aspx',
+        '海尔集团': 'https://maker.haier.net/campus',
+        '潍柴动力': 'https://www.weichai.com/col/col4401/index.html',
+        '比亚迪股份有限公司': 'https://job.byd.com/campus',
+        '中国船舶集团': 'https://www.cssc.net.cn/column/col4487/index.html',
+        '西门子中国': 'https://new.siemens.com/cn/zh/company/jobs.html',
+        '美的集团': 'https://www.midea.com/career/campus',
+        '立讯精密': 'https://www.luxshare-ict.com/joinus',
+        '华为终端': 'https://career.huawei.com/reccampportal',
+        '发那科机器人': 'https://www.fanuc.com.cn/joinus',
+        '博世力士乐': 'https://www.boschrexroth.com/zh/cn/career',
+        '蔚来汽车': 'https://www.nio.com/careers',
+        '中国一拖集团': 'https://www.yituo.com.cn/col/col4480/index.html',
+        '小米汽车': 'https://hr.xiaomi.com/campus',
+        '吉利汽车': 'https://careers.geely.com',
+        '中国建筑集团': 'https://job.cscec.com',
+        '大疆创新': 'https://we.dji.com/zh-CN/campus',
+        '中国商飞': 'https://www.comac.cc/zpxx/zpxx.shtml',
+        '大华股份': 'https://www.dahuatech.com/joinus/campus',
+        '中国兵装集团': 'https://www.csgc.com.cn',
+        '山推股份': 'https://www.shantui.com/join',
+        '宁德时代': 'https://www.catl.com/career',
+        '汇川技术': 'https://www.inovance.com/joinus',
+        '先临三维': 'https://www.shining3d.com/joinus',
+        '长城汽车': 'https://www.gwm.com.cn/joinGWM',
+        '费斯托中国': 'https://www.festo.com/cn/zh/career',
+        '北方华创': 'https://www.naura.com/joinus/campus',
+        '宝钢股份': 'https://www.baosteel.com/zhaopin',
+        '理想汽车': 'https://www.lixiang.com/career',
+        '采埃孚中国': 'https://www.zf.com/careers',
+        '三花控股': 'https://www.sanhua.com/career',
+        '海康威视': 'https://www.hikvision.com/cn/joinus',
+        '正泰电器': 'https://www.chint.com/joinus',
+        'ABB中国': 'https://new.abb.com/careers',
+        'PTC中国': 'https://www.ptc.com/careers',
+      };
+
+      let urlCount = 0;
+      for (const [company, url] of Object.entries(urlMap)) {
+        const result = run('UPDATE jobs SET source_url = ? WHERE company = ?', [url, company]);
+        urlCount++;
+      }
+      console.log(`🔗 已更新 ${urlCount} 家公司的 source_url`);
+
+      // 扩展短描述
+      const shortJobs = query("SELECT id, description, requirements, experience FROM jobs WHERE LENGTH(description) < 150");
+      let descCount = 0;
+      for (const job of shortJobs) {
+        const isIntern = job.experience === '实习';
+        const isFresh = job.experience === '应届生';
+        const prefix = isIntern ? '实习' : (isFresh ? '校招' : '');
+
+        const expandedDesc = job.description + '\n\n' +
+          (isIntern || isFresh ?
+            `${prefix}岗位说明：\n1. 公司将提供系统化的岗前培训和导师带教\n2. 具体工作内容将根据项目需求灵活安排\n3. 表现优异者可获得转正机会\n4. 提供行业领先的实践平台` :
+            `岗位职责补充：\n1. 负责技术方案制定与评审\n2. 参与跨部门协作推动项目交付\n3. 持续优化产品和工艺\n4. 指导初级工程师`);
+
+        const expandedReq = job.requirements + '\n\n' +
+          (isIntern || isFresh ?
+            `附加要求：\n1. 学习能力强，能短期内掌握岗位技能\n2. 团队协作精神和沟通表达能力\n3. 对机械行业有热情` :
+            `附加要求：\n1. 项目管理和技术决策能力\n2. 跨部门沟通协调能力\n3. 快节奏环境下高效工作`);
+
+        run('UPDATE jobs SET description = ?, requirements = ? WHERE id = ?', [expandedDesc, expandedReq, job.id]);
+        descCount++;
+      }
+      console.log(`📝 已扩展 ${descCount} 条岗位的详细描述`);
+
+      saveDb();
+      console.log('✅ 数据迁移完成并已保存');
+    } else {
+      console.log('✅ 数据已是最新版本，无需迁移');
     }
-    console.log('🔗 已更新所有岗位的 source_url 为公司官方招聘页面');
   };
 
-  migrateSourceUrls();
-
-  // 数据迁移：扩展职位描述和任职要求（为所有短描述岗位追加详细内容）
-  const migrateJobDetails = () => {
-    const shortJobs = query("SELECT id, description, requirements, experience, title FROM jobs WHERE LENGTH(description) < 150");
-    let updated = 0;
-    for (const job of shortJobs) {
-      // 根据经验类型生成详细描述
-      const isIntern = job.experience === '实习';
-      const isFresh = job.experience === '应届生';
-      const prefix = isIntern ? '实习' : (isFresh ? '校招' : '');
-
-      const expandedDesc = job.description + '\n\n' +
-        (isIntern || isFresh ?
-          `${prefix}岗位说明：\n1. 公司将提供系统化的岗前培训和导师带教，帮助新人快速融入团队\n2. 具体工作内容将根据所在部门项目需求灵活安排，覆盖设计/工艺/测试/现场等环节\n3. 表现优异者可获得转正机会，职业发展通道清晰\n4. 提供行业领先的实践平台，接触前沿产品和技术` :
-          `岗位职责补充：\n1. 负责相关技术方案的制定与评审，确保设计质量\n2. 参与跨部门协作，推动项目按时交付\n3. 持续优化现有产品和工艺，提升性能和效率\n4. 指导初级工程师，分享专业经验`);
-
-      const expandedReq = job.requirements + '\n\n' +
-        (isIntern || isFresh ?
-          `附加要求：\n1. 学习能力强，能在短期内掌握岗位所需技能\n2. 具备良好的团队协作精神和沟通表达能力\n3. 对机械行业有热情，愿意长期深耕` :
-          `附加要求：\n1. 具有出色的项目管理和技术决策能力\n2. 良好的跨部门沟通协调能力\n3. 能在快节奏环境下高效工作`);
-
-      run('UPDATE jobs SET description = ?, requirements = ? WHERE id = ?', [expandedDesc, expandedReq, job.id]);
-      updated++;
-    }
-    console.log(`📝 已扩展 ${updated} 条岗位的详细描述`);
-  };
-
-  migrateJobDetails();
-  saveDb(); // 确保迁移结果立即写入磁盘
+  migrateV2();
 
 module.exports = { initDatabase, query, run, get, saveDb };
