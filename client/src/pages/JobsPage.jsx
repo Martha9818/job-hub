@@ -9,6 +9,7 @@ export default function JobsPage() {
   const [pagination, setPagination] = useState({ page: 1, total: 0, total_pages: 0 });
   const [filters, setFilters] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const keyword = searchParams.get('keyword') || '';
@@ -62,11 +63,20 @@ export default function JobsPage() {
       {/* 搜索栏 */}
       <div className="card p-4 mb-6">
         <div className="flex flex-wrap gap-3">
-          <input
-            type="text" defaultValue={keyword} placeholder="搜索岗位名称、公司名..."
-            className="input flex-1 min-w-[200px]"
-            onKeyDown={e => { if (e.key === 'Enter') updateSearch('keyword', e.target.value); }}
-          />
+          <div className="flex flex-1 min-w-[200px]">
+            <input
+              type="text" value={searchInput} placeholder="搜索岗位名称、公司名..."
+              className="input flex-1 rounded-r-none"
+              onChange={e => setSearchInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') updateSearch('keyword', searchInput); }}
+            />
+            <button
+              onClick={() => updateSearch('keyword', searchInput)}
+              className="btn-primary rounded-l-none px-4"
+            >
+              🔍
+            </button>
+          </div>
           <select value={location} onChange={e => updateSearch('location', e.target.value)} className="select w-auto">
             <option value="">全部地区</option>
             {filters?.locations?.map(l => <option key={l} value={l}>{l}</option>)}

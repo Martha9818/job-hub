@@ -29,6 +29,7 @@ export default function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-6">
           {navLink('/jobs', '岗位搜索')}
+          {navLink('/campus', '校招实习')}
           {user ? (
             <>
               {navLink('/resumes', '我的简历')}
@@ -60,6 +61,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white px-4 py-3 space-y-2">
           <Link to="/jobs" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 font-medium">🔍 岗位搜索</Link>
+          <Link to="/campus" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 font-medium">🎓 校招实习</Link>
           {user ? (
             <>
               <Link to="/resumes" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 font-medium">📄 我的简历</Link>

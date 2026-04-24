@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 
 const HOT_CATEGORIES = [
@@ -17,6 +17,7 @@ export default function HomePage() {
   const [stats, setStats] = useState(null);
   const [hotJobs, setHotJobs] = useState([]);
   const [keyword, setKeyword] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     apiClient.get('/jobs/meta/stats').then(res => setStats(res.data)).catch(() => {});
@@ -26,7 +27,7 @@ export default function HomePage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    window.location.href = `/jobs?keyword=${encodeURIComponent(keyword)}`;
+    navigate(`/jobs?keyword=${encodeURIComponent(keyword)}`);
   };
 
   return (
@@ -121,21 +122,26 @@ export default function HomePage() {
       )}
 
       {/* 快捷入口 */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to="/jobs?industry=机械" className="card-interactive p-8 group">
-          <div className="text-4xl mb-4">🔍</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600">浏览机械岗位</h3>
-          <p className="text-gray-500 text-sm">按地区、薪资、经验筛选机械行业招聘信息</p>
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <Link to="/campus" className="card-interactive p-6 group">
+          <div className="text-3xl mb-3">🎓</div>
+          <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">校招实习</h3>
+          <p className="text-gray-500 text-xs">2026春招校招信息汇总，应届生专场</p>
         </Link>
-        <Link to="/resumes" className="card-interactive p-8 group">
-          <div className="text-4xl mb-4">📄</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600">上传简历</h3>
-          <p className="text-gray-500 text-sm">上传简历文件，一键投递多个心仪岗位</p>
+        <Link to="/jobs?industry=机械" className="card-interactive p-6 group">
+          <div className="text-3xl mb-3">🔍</div>
+          <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">浏览岗位</h3>
+          <p className="text-gray-500 text-xs">按地区、薪资、经验筛选机械行业招聘</p>
         </Link>
-        <Link to="/apply" className="card-interactive p-8 group">
-          <div className="text-4xl mb-4">🚀</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600">一键投递</h3>
-          <p className="text-gray-500 text-sm">选择岗位批量投递，浏览器自动帮您投递</p>
+        <Link to="/resumes" className="card-interactive p-6 group">
+          <div className="text-3xl mb-3">📄</div>
+          <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">上传简历</h3>
+          <p className="text-gray-500 text-xs">上传简历文件，一键投递多个心仪岗位</p>
+        </Link>
+        <Link to="/apply" className="card-interactive p-6 group">
+          <div className="text-3xl mb-3">🚀</div>
+          <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">一键投递</h3>
+          <p className="text-gray-500 text-xs">选择岗位批量投递，浏览器自动帮您投递</p>
         </Link>
       </section>
     </div>
