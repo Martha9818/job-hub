@@ -1,5 +1,7 @@
-// 开发环境走 Vite 代理，生产环境直接请求后端
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+// 开发环境走 Vite 代理(/api)，生产环境直接请求 Railway 后端
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
 
 class ApiError extends Error {
   constructor(status, body) {

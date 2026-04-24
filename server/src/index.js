@@ -40,7 +40,9 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:3001',
-    process.env.FRONTEND_URL,  // Vercel 部署后的域名
+    process.env.FRONTEND_URL,
+    // Vercel 预览和正式域名
+    /^https:\/\/[a-z0-9-]+\.vercel\.app$/,
   ].filter(Boolean),
   credentials: true,
 }));
@@ -108,7 +110,7 @@ async function start() {
     startScheduler(cronExpr);
   }
 
-  const HOST = process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : 'localhost';
+  const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
   app.listen(PORT, HOST, () => {
     console.log(`
   ╔══════════════════════════════════════════╗
