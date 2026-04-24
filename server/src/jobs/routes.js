@@ -4,8 +4,8 @@ const { jobSearchSchema } = require('../common/validation');
 
 const router = express.Router();
 
-// 手动触发数据迁移（管理员用）— 必须在 /:id 之前
-router.post('/migrate', (req, res) => {
+// 手动触发数据迁移（管理员用）— 必须在 /:id 之前，用GET方便浏览器调用
+router.get('/migrate', (req, res) => {
   try {
     const { query: q, run: r, saveDb: s } = require('../common/database');
 
