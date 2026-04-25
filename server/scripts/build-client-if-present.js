@@ -9,9 +9,15 @@ if (process.env.SKIP_CLIENT_BUILD === 'true') {
 
 const clientDir = path.resolve(__dirname, '..', '..', 'client');
 const clientPackage = path.join(clientDir, 'package.json');
+const clientDist = path.join(clientDir, 'dist', 'index.html');
 
 if (!fs.existsSync(clientPackage)) {
   console.log('[postinstall] client package not found, skipping client build');
+  process.exit(0);
+}
+
+if (fs.existsSync(clientDist)) {
+  console.log('[postinstall] client dist already exists, skipping client build');
   process.exit(0);
 }
 
@@ -34,9 +40,9 @@ function run(command, args) {
 console.log('[postinstall] building React client for integrated Express deployment');
 if (process.platform === 'win32') {
   const shell = process.env.ComSpec || 'cmd.exe';
-  run(shell, ['/d', '/s', '/c', 'npm install']);
+  run(shell, ['/d', '/s', '/c', 'npm install --include=dev']);
   run(shell, ['/d', '/s', '/c', 'npm run build']);
 } else {
-  run('npm', ['install']);
+  run('npm', ['install', '--include=dev']);
   run('npm', ['run', 'build']);
 }

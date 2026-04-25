@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     # 根目录构建：先装前端依赖并构建，再装后端依赖
-    buildCommand: cd client && npm install && npm run build && cd ../server && npm install
+    buildCommand: cd client && npm install --include=dev && npm run build && cd ../server && SKIP_CLIENT_BUILD=true npm install
     startCommand: cd server && node src/index.js
     envVars:
       - key: NODE_ENV
