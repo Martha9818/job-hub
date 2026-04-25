@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { updateJobSearchParams } from './jobsSearchParams';
 
 export default function JobsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,10 +59,7 @@ export default function JobsPage() {
   };
 
   const updateSearch = (key, value) => {
-    const params = new URLSearchParams(searchParams);
-    if (value) { params.set(key, value); } else { params.delete(key); }
-    params.set('page', '1');
-    setSearchParams(params);
+    setSearchParams(updateJobSearchParams(searchParams, key, value));
   };
 
   const matchBadgeClass = (level) => {

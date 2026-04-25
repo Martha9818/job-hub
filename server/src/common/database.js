@@ -5,6 +5,7 @@
 const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
+const { buildSupplementalJobs } = require('../jobs/supplemental-jobs');
 
 const DB_PATH = process.env.DB_PATH || './data/jobhub.db';
 
@@ -332,6 +333,14 @@ async function initDatabase() {
     }
     console.log(`🛡️ ${fallbackCount} 家未配置官网的公司已自动生成搜索链接兜底`);
   }
+
+  const supplementalJobs = buildSupplementalJobs();
+  let supplementalCount = 0;
+  for (const job of supplementalJobs) {
+    const result = run(`INSERT OR IGNORE INTO jobs (id, source_id, source_job_id, title, company, salary_min, salary_max, salary_text, location, category, industry, experience, education, description, requirements, benefits, job_type, publish_date, source_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, job);
+    supplementalCount += result.changes || 0;
+  }
+  console.log(`➕ 已补充 ${supplementalCount} 条机械岗位`);
 
   // 扩展短描述
   const shortJobs = query("SELECT id, description, requirements, experience FROM jobs WHERE LENGTH(description) < 150");
