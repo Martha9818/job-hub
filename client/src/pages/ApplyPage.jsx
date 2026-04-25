@@ -191,8 +191,8 @@ export default function ApplyPage() {
                   r.status === 'success' ? '✅ 投递成功' :
                   r.status === 'submitted' ? '✅ 已提交' :
                   r.status === 'pending' ? '⏳ 等待自动投递' :
-                  r.status === 'skipped' ? '⏭️ 已跳过' :
-                  `❌ ${r.error}`
+                  r.status === 'skipped' ? `⏭️ ${r.error || '已跳过'}` :
+                  `❌ ${r.error || '投递失败'}`
                 }
               </div>
             ))}
