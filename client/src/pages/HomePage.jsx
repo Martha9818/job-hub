@@ -136,12 +136,12 @@ export default function HomePage() {
         <Link to="/resumes" className="card-interactive p-6 group">
           <div className="text-3xl mb-3">📄</div>
           <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">上传简历</h3>
-          <p className="text-gray-500 text-xs">上传简历文件，一键投递多个心仪岗位</p>
+          <p className="text-gray-500 text-xs">上传简历文件，收藏心仪岗位</p>
         </Link>
         <Link to="/apply" className="card-interactive p-6 group">
           <div className="text-3xl mb-3">🚀</div>
-          <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">一键投递</h3>
-          <p className="text-gray-500 text-xs">选择岗位批量投递，浏览器自动帮您投递</p>
+          <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-primary-600">收藏投递</h3>
+          <p className="text-gray-500 text-xs">收藏岗位，一键跳转企业官网完成投递</p>
         </Link>
       </section>
     </div>

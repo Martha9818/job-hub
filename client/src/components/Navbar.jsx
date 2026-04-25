@@ -36,7 +36,7 @@ export default function Navbar() {
               {navLink('/applications', '投递记录')}
               {navLink('/admin', '数据管理')}
               <Link to="/apply" className="btn-primary btn-sm">
-                一键投递
+                收藏投递
               </Link>
               <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
                 <span className="text-sm text-gray-500">{user.username}</span>
@@ -67,7 +67,7 @@ export default function Navbar() {
               <Link to="/resumes" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 font-medium">📄 我的简历</Link>
               <Link to="/applications" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 font-medium">📬 投递记录</Link>
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 font-medium">⚙️ 数据管理</Link>
-              <Link to="/apply" onClick={() => setMobileOpen(false)} className="block py-2 text-primary-600 font-medium">🚀 一键投递</Link>
+              <Link to="/apply" onClick={() => setMobileOpen(false)} className="block py-2 text-primary-600 font-medium">📌 收藏投递</Link>
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span className="text-sm text-gray-500">{user.username}</span>
                 <button onClick={() => { logout(); setMobileOpen(false); }} className="text-sm text-red-500">退出</button>

@@ -30,7 +30,7 @@ router.post('/', authenticate, validate(applySchema), async (req, res, next) => 
       run('INSERT INTO applications (id, user_id, job_id, resume_id, status) VALUES (?, ?, ?, ?, ?)',
         [appId, userId, jobId, resume_id, auto_apply ? 'pending' : 'submitted']);
 
-      results.push({ job_id: jobId, application_id: appId, status: auto_apply ? 'pending' : 'submitted', title: job.title, company: job.company });
+      results.push({ job_id: jobId, application_id: appId, status: auto_apply ? 'pending' : 'submitted', title: job.title, company: job.company, source_url: job.source_url });
 
       if (auto_apply && job.source_url) {
         validApps.push({ id: appId, job_id: jobId, source_id: job.source_id, source_url: job.source_url, title: job.title, company: job.company, resume_id });

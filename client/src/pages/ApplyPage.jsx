@@ -73,7 +73,7 @@ export default function ApplyPage() {
   if (loadError) {
     return (
       <div className="max-w-4xl mx-auto animate-fade-in">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">🚀 一键投递</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">📌 岗位收藏与投递</h1>
         <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <p className="text-red-700 mb-3">{loadError}</p>
           {loadError.includes('登录') ? (
@@ -88,7 +88,8 @@ export default function ApplyPage() {
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">🚀 一键投递</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">📌 岗位收藏与投递</h1>
+      <p className="text-sm text-gray-500 mb-6">收藏感兴趣的岗位，点击"去投递"前往企业官网完成投递</p>
 
       {/* 简历选择 */}
       {resumes.length === 0 ? (
@@ -118,9 +119,9 @@ export default function ApplyPage() {
               className="w-4 h-4 text-primary-600 rounded"
             />
             <div>
-              <span className="font-medium text-gray-900">启用浏览器自动投递</span>
+              <span className="font-medium text-gray-900">启用浏览器自动投递（实验性）</span>
               <p className="text-xs text-gray-500 mt-0.5">
-                勾选后将打开浏览器窗口，自动在招聘网站投递简历。如未登录，需在浏览器中手动登录。
+                勾选后将尝试用浏览器自动在招聘网站投递。成功率不稳定，建议优先使用"去投递"按钮手动投递。
               </p>
             </div>
           </label>
@@ -174,26 +175,33 @@ export default function ApplyPage() {
       {/* 投递按钮 */}
       <button onClick={handleApply} disabled={applying || selectedJobs.size === 0 || !selectedResume}
         className="w-full py-4 bg-primary-600 text-white rounded-xl text-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors shadow-sm">
-        {applying ? '投递中...' : `🚀 ${autoApply ? '自动' : ''}投递选中的 ${selectedJobs.size} 个岗位`}
+        {applying ? '处理中...' : `📌 收藏选中的 ${selectedJobs.size} 个岗位`}
       </button>
 
       {/* 结果 */}
       {results && (
         <div className="mt-6 card p-6">
-          <h3 className="font-semibold mb-3">投递结果</h3>
+          <h3 className="font-semibold mb-3">操作结果</h3>
+          <p className="text-xs text-gray-500 mb-3">💡 提示：点击"去投递"前往企业官网或招聘平台，手动完成投递更可靠</p>
           <div className="space-y-2">
             {results.map((r, i) => (
-              <div key={i} className={`text-sm p-2 rounded ${
-                r.status === 'success' || r.status === 'submitted' || r.status === 'pending' ? 'bg-green-50 text-green-700' :
+              <div key={i} className={`text-sm p-3 rounded flex items-center justify-between gap-3 ${
+                r.status === 'submitted' ? 'bg-green-50 text-green-700' :
                 r.status === 'skipped' ? 'bg-yellow-50 text-yellow-700' :
                 'bg-red-50 text-red-700'}`}>
-                {r.title ? `${r.company} - ${r.title}` : r.job_id}: {
-                  r.status === 'success' ? '✅ 投递成功' :
-                  r.status === 'submitted' ? '✅ 已提交' :
-                  r.status === 'pending' ? '⏳ 等待自动投递' :
-                  r.status === 'skipped' ? `⏭️ ${r.error || '已跳过'}` :
-                  `❌ ${r.error || '投递失败'}`
-                }
+                <span>
+                  {r.title ? `${r.company} - ${r.title}` : r.job_id}: {
+                    r.status === 'submitted' ? '📌 已添加到投递列表' :
+                    r.status === 'skipped' ? `⏭️ ${r.error || '已跳过'}` :
+                    `❌ ${r.error || '操作失败'}`
+                  }
+                </span>
+                {r.source_url && r.status === 'submitted' && (
+                  <a href={r.source_url} target="_blank" rel="noopener noreferrer"
+                    className="shrink-0 px-3 py-1 bg-primary-600 text-white text-xs rounded-lg hover:bg-primary-700">
+                    去投递 →
+                  </a>
+                )}
               </div>
             ))}
           </div>
