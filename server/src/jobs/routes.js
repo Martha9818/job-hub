@@ -115,7 +115,7 @@ router.get('/meta/stats', (req, res) => {
 // 搜索岗位
 router.get('/', (req, res, next) => {
   try {
-    const { keyword, location, category, industry, salary_min, salary_max, experience, education, page = 1, page_size = 20, sort } = req.query;
+    const { keyword, location, category, industry, salary_min, salary_max, experience, education, nature, page = 1, page_size = 20, sort } = req.query;
 
     const conditions = ['j.is_active = 1'];
     const params = [];
@@ -128,6 +128,12 @@ router.get('/', (req, res, next) => {
     if (salary_max) { conditions.push('(j.salary_min <= ? OR j.salary_min IS NULL)'); params.push(Number(salary_max)); }
     if (experience) { conditions.push('j.experience LIKE ?'); params.push(`%${experience}%`); }
     if (education) { conditions.push('j.education LIKE ?'); params.push(`%${education}%`); }
+    // 性质筛选：校招=应届生, 实习=实习, 社招=非应届非实习
+    if (nature) {
+      if (nature === '校招') { conditions.push("j.experience = '应届生'"); }
+      else if (nature === '实习') { conditions.push("j.experience = '实习'"); }
+      else if (nature === '社招') { conditions.push("j.experience NOT IN ('应届生', '实习')"); }
+    }
 
     const whereClause = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
     let orderClause = 'ORDER BY j.publish_date DESC, j.crawled_at DESC';

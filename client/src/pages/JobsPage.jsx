@@ -16,6 +16,7 @@ export default function JobsPage() {
   const location = searchParams.get('location') || '';
   const industry = searchParams.get('industry') || '';
   const category = searchParams.get('category') || '';
+  const nature = searchParams.get('nature') || '';
   const salaryMin = searchParams.get('salary_min') || '';
   const sort = searchParams.get('sort') || 'latest';
   const page = parseInt(searchParams.get('page') || '1');
@@ -31,6 +32,7 @@ export default function JobsPage() {
     if (location) params.set('location', location);
     if (industry) params.set('industry', industry);
     if (category) params.set('category', category);
+    if (nature) params.set('nature', nature);
     if (salaryMin) params.set('salary_min', salaryMin);
     if (sort !== 'latest') params.set('sort', sort);
     params.set('page', page);
@@ -42,7 +44,14 @@ export default function JobsPage() {
       })
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));
-  }, [keyword, location, industry, category, salaryMin, sort, page]);
+  }, [keyword, location, industry, category, nature, salaryMin, sort, page]);
+
+  // 岗位性质映射
+  const getNature = (experience) => {
+    if (experience === '应届生') return { label: '校招', color: 'bg-blue-100 text-blue-700' };
+    if (experience === '实习') return { label: '实习', color: 'bg-green-100 text-green-700' };
+    return { label: '社招', color: 'bg-orange-100 text-orange-700' };
+  };
 
   const updateSearch = (key, value) => {
     const params = new URLSearchParams(searchParams);
@@ -85,6 +94,12 @@ export default function JobsPage() {
             <option value="">全部类别</option>
             {filters?.categories?.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+          <select value={nature} onChange={e => updateSearch('nature', e.target.value)} className="select w-auto">
+            <option value="">全部性质</option>
+            <option value="校招">校招</option>
+            <option value="实习">实习</option>
+            <option value="社招">社招</option>
+          </select>
           <select value={salaryMin} onChange={e => updateSearch('salary_min', e.target.value)} className="select w-auto">
             <option value="">薪资不限</option>
             <option value="5000">5K以上</option>
@@ -121,6 +136,7 @@ export default function JobsPage() {
                       <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 truncate">{job.title}</h3>
                       <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                       <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500">
+                        {(() => { const n = getNature(job.experience); return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${n.color}`}>{n.label}</span>; })()}
                         {job.location && <span>📍 {job.location}</span>}
                         {job.experience && <span>📋 {job.experience}</span>}
                         {job.education && <span>🎓 {job.education}</span>}
@@ -157,6 +173,84 @@ export default function JobsPage() {
                 className="btn-secondary btn-sm disabled:opacity-40">下一页</button>
             </div>
           )}
+
+          {/* 校招专区 */}
+          {nature === '' && (() => {
+            const campusJobs = jobs.filter(j => j.experience === '应届生');
+            if (campusJobs.length === 0) return null;
+            return (
+              <div className="mt-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-blue-700">🎓 校招专区</h2>
+                  <button onClick={() => updateSearch('nature', '校招')} className="text-xs text-primary-600 hover:underline">查看全部校招 →</button>
+                </div>
+                <div className="space-y-3">
+                  {campusJobs.slice(0, 6).map(job => (
+                    <div key={job.id} className="card-interactive p-4 flex items-start gap-3">
+                      <Link to={`/jobs/${job.id}`} className="flex-1 min-w-0">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-gray-900 mb-1 truncate">{job.title}</h3>
+                            <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
+                            <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">校招</span>
+                              {job.location && <span>📍 {job.location}</span>}
+                              {job.education && <span>🎓 {job.education}</span>}
+                            </div>
+                          </div>
+                          <div className="text-left md:text-right shrink-0">
+                            <div className="text-lg font-bold text-red-500">{job.salary_text || '面议'}</div>
+                          </div>
+                        </div>
+                      </Link>
+                      <button onClick={(e) => { e.preventDefault(); toggleFavorite(job.id); }} className="shrink-0 p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        {isFavorite(job.id) ? <span className="text-red-500 text-lg">❤️</span> : <span className="text-gray-300 text-lg hover:text-red-400">🤍</span>}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 实习专区 */}
+          {nature === '' && (() => {
+            const internJobs = jobs.filter(j => j.experience === '实习');
+            if (internJobs.length === 0) return null;
+            return (
+              <div className="mt-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-green-700">💼 实习专区</h2>
+                  <button onClick={() => updateSearch('nature', '实习')} className="text-xs text-primary-600 hover:underline">查看全部实习 →</button>
+                </div>
+                <div className="space-y-3">
+                  {internJobs.slice(0, 6).map(job => (
+                    <div key={job.id} className="card-interactive p-4 flex items-start gap-3">
+                      <Link to={`/jobs/${job.id}`} className="flex-1 min-w-0">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-gray-900 mb-1 truncate">{job.title}</h3>
+                            <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
+                            <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">实习</span>
+                              {job.location && <span>📍 {job.location}</span>}
+                              {job.education && <span>🎓 {job.education}</span>}
+                            </div>
+                          </div>
+                          <div className="text-left md:text-right shrink-0">
+                            <div className="text-lg font-bold text-red-500">{job.salary_text || '面议'}</div>
+                          </div>
+                        </div>
+                      </Link>
+                      <button onClick={(e) => { e.preventDefault(); toggleFavorite(job.id); }} className="shrink-0 p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        {isFavorite(job.id) ? <span className="text-red-500 text-lg">❤️</span> : <span className="text-gray-300 text-lg hover:text-red-400">🤍</span>}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </>
       )}
     </div>
