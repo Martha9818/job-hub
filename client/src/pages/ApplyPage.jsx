@@ -50,7 +50,8 @@ export default function ApplyPage() {
         alert('浏览器窗口即将打开，请在浏览器中确认投递操作。如需登录招聘网站，请在弹出的浏览器中手动登录。');
       }
     } catch (err) {
-      alert(err.body?.message || '投递失败');
+      const msg = err.body?.message || err.body?.errors?.map(e => e.message).join('; ') || '投递失败';
+      alert(msg);
     } finally { setApplying(false); }
   };
 
