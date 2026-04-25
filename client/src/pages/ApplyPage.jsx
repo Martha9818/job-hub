@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiClient } from '../lib/api';
 
@@ -77,7 +78,7 @@ export default function ApplyPage() {
         <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <p className="text-red-700 mb-3">{loadError}</p>
           {loadError.includes('登录') ? (
-            <a href="/login" className="btn-primary inline-block">去登录</a>
+            <Link to="/login" className="btn-primary inline-block">去登录</Link>
           ) : (
             <button onClick={() => window.location.reload()} className="btn-primary">刷新重试</button>
           )}
@@ -95,7 +96,7 @@ export default function ApplyPage() {
       {resumes.length === 0 ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
           <p className="text-yellow-700 mb-2">请先上传简历后再投递</p>
-          <a href="/resumes" className="text-primary-600 font-medium underline">→ 前往上传简历</a>
+          <Link to="/resumes" className="text-primary-600 font-medium underline">→ 前往上传简历</Link>
         </div>
       ) : (
         <div className="card p-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">

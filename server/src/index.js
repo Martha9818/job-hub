@@ -87,23 +87,7 @@ app.post('/api/scheduler/run-now', async (req, res) => {
   }
 });
 
-// 根路径欢迎页
-app.get('/', (req, res) => {
-  res.json({
-    name: 'JobHub API',
-    description: '机械行业招聘信息聚合平台',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      jobs: '/api/jobs',
-      auth: '/api/auth/login',
-      scraper: '/api/scraper/status',
-      compliance: '/api/scraper/compliance',
-    },
-  });
-});
-
-// 健康检查
+// 健康检查（在静态文件之前，保持 API 优先）
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 app.get('/ready', (req, res) => {
   try {
@@ -114,8 +98,36 @@ app.get('/ready', (req, res) => {
   }
 });
 
-// 全局错误处理
-app.use(globalErrorHandler);
+// 全局错误处理（仅处理 API 错误）
+app.use('/api', globalErrorHandler);
+
+// 前端静态文件服务（生产环境）
+const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  // SPA catch-all：所有非 /api、非静态文件的请求都返回 index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+  console.log(`📦 前端静态文件已挂载: ${clientDistPath}`);
+} else {
+  // 开发环境没有 client/dist，保留原来的 API 欢迎页
+  app.get('/', (req, res) => {
+    res.json({
+      name: 'JobHub API',
+      description: '机械行业招聘信息聚合平台',
+      version: '1.0.0',
+      note: '前端未构建，仅 API 模式运行',
+      endpoints: {
+        health: '/health',
+        jobs: '/api/jobs',
+        auth: '/api/auth/login',
+        scraper: '/api/scraper/status',
+      },
+    });
+  });
+  app.use(globalErrorHandler);
+}
 
 // 启动
 async function start() {

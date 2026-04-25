@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 
 // 合规风险等级颜色映射
@@ -355,7 +356,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold">手动录入岗位</h2>
             <p className="text-sm text-gray-500">完全合规的方式——你在招聘网站看到感兴趣的岗位，手动录入系统管理</p>
           </div>
-          <a href="/jobs" className="btn-primary btn-sm">去录入</a>
+          <Link to="/jobs" className="btn-primary btn-sm">去录入</Link>
         </div>
       </div>
     </div>
