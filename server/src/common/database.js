@@ -317,7 +317,21 @@ async function initDatabase() {
     run('UPDATE jobs SET source_url = ? WHERE company = ?', [url, company]);
     urlCount++;
   }
-  console.log(`🔗 已更新 ${urlCount} 家公司的 source_url`);
+  console.log(`🔗 已更新 ${urlCount} 家公司的 source_url 为官网首页`);
+
+  // === 安全网：urlMap 未覆盖的公司，自动生成 Boss直聘搜索链接 ===
+  // Boss直聘搜索链接按公司名搜索，永远不会404，是最佳兜底方案
+  const uncoveredJobs = query('SELECT DISTINCT company FROM jobs WHERE company NOT IN (' +
+    Object.keys(urlMap).map(() => '?').join(',') + ')', Object.keys(urlMap));
+  if (uncoveredJobs.length > 0) {
+    let fallbackCount = 0;
+    for (const { company } of uncoveredJobs) {
+      const searchUrl = `https://www.zhipin.com/web/geek/job?query=${encodeURIComponent(company)}`;
+      run('UPDATE jobs SET source_url = ? WHERE company = ?', [searchUrl, company]);
+      fallbackCount++;
+    }
+    console.log(`🛡️ ${fallbackCount} 家未配置官网的公司已自动生成搜索链接兜底`);
+  }
 
   // 扩展短描述
   const shortJobs = query("SELECT id, description, requirements, experience FROM jobs WHERE LENGTH(description) < 150");

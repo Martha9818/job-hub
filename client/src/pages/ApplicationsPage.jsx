@@ -103,7 +103,9 @@ export default function ApplicationsPage() {
                   <span className={`text-xs px-3 py-1 rounded-full font-medium ${s.color}`}>{s.label}</span>
                   {app.source_url && (
                     <a href={app.source_url} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-primary-600 hover:underline">查看</a>
+                      className="text-xs text-primary-600 hover:underline">
+                      {app.source_url.includes('zhipin.com') ? '搜索' : '官网'}
+                    </a>
                   )}
                 </div>
               </div>

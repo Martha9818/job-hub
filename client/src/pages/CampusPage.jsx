@@ -243,7 +243,9 @@ export default function CampusPage() {
                       <div className="flex items-center justify-center gap-2">
                         {job.source_url && (
                           <a href={job.source_url} target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-primary-600 hover:underline">投递官网</a>
+                            className="text-xs text-primary-600 hover:underline">
+                            {job.source_url.includes('zhipin.com') ? '搜索职位' : '企业官网'}
+                          </a>
                         )}
                         <button
                           onClick={() => toggleFavorite(job.id)}

@@ -88,7 +88,7 @@ export default function JobDetailPage() {
           {job.source_url && (
             <a href={job.source_url} target="_blank" rel="noopener noreferrer"
               className="btn-primary btn-lg rounded-xl text-center">
-              🔗 查看原始招聘页面
+              {job.source_url.includes('zhipin.com') ? '🔍 搜索该企业招聘信息' : '🏢 访问企业官网'}
             </a>
           )}
           {user ? (
