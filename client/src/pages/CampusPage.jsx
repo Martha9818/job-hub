@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { updateJobSearchParams } from './jobsSearchParams';
 
 // 快速筛选标签
 const QUICK_TABS = [
@@ -86,10 +87,7 @@ export default function CampusPage() {
   }, [activeTab, city, edu, keyword, page]);
 
   const updateSearch = (key, value) => {
-    const params = new URLSearchParams(searchParams);
-    if (value && value !== '不限') { params.set(key, value); } else { params.delete(key); }
-    params.set('page', '1');
-    setSearchParams(params);
+    setSearchParams(updateJobSearchParams(searchParams, key, value === '不限' ? '' : value));
   };
 
   const switchTab = (tab) => {
