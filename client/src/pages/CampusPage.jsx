@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { useAppliedJobs } from '../hooks/useAppliedJobs';
 import { updateJobSearchParams } from './jobsSearchParams';
 
 // 快速筛选标签
@@ -25,7 +26,7 @@ const getNature = (experience) => {
 const HOT_CITIES = ['不限', '上海', '北京', '深圳', '杭州', '苏州', '广州', '南京', '武汉', '成都', '长沙', '合肥', '西安', '大连', '宁波'];
 
 // 学历筛选
-const EDU_OPTIONS = ['不限', '大专', '本科', '硕士', '博士'];
+const EDU_OPTIONS = ['不限', '本科及以上'];
 
 export default function CampusPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,6 +35,7 @@ export default function CampusPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'card'
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isApplied } = useAppliedJobs();
 
   const activeTab = searchParams.get('tab') || 'all';
   const city = searchParams.get('location') || '';
@@ -242,7 +244,12 @@ export default function CampusPage() {
                             <tr key={job.id} className={`border-b border-gray-100 hover:bg-primary-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                               <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{job.publish_date?.slice(5) || '-'}</td>
                               <td className="px-4 py-3 whitespace-nowrap"><span className="font-medium text-gray-800 text-sm">{job.company}</span></td>
-                              <td className="px-4 py-3"><Link to={`/jobs/${job.id}`} className="text-primary-600 hover:text-primary-800 font-medium hover:underline">{job.title}</Link></td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Link to={`/jobs/${job.id}`} className="text-primary-600 hover:text-primary-800 font-medium hover:underline">{job.title}</Link>
+                                  {isApplied(job.id) && <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
+                                </div>
+                              </td>
                               <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">校招</span></td>
                               <td className="px-4 py-3 whitespace-nowrap"><span className="text-red-500 font-semibold">{job.salary_text || '面议'}</span></td>
                               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{job.location}</td>
@@ -271,6 +278,7 @@ export default function CampusPage() {
                               <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                               <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">校招</span>
+                                {isApplied(job.id) && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
                                 {job.location && <span>📍 {job.location}</span>}
                                 {job.education && <span>🎓 {job.education}</span>}
                                 <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded">{job.category}</span>
@@ -318,7 +326,12 @@ export default function CampusPage() {
                             <tr key={job.id} className={`border-b border-gray-100 hover:bg-primary-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                               <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{job.publish_date?.slice(5) || '-'}</td>
                               <td className="px-4 py-3 whitespace-nowrap"><span className="font-medium text-gray-800 text-sm">{job.company}</span></td>
-                              <td className="px-4 py-3"><Link to={`/jobs/${job.id}`} className="text-primary-600 hover:text-primary-800 font-medium hover:underline">{job.title}</Link></td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Link to={`/jobs/${job.id}`} className="text-primary-600 hover:text-primary-800 font-medium hover:underline">{job.title}</Link>
+                                  {isApplied(job.id) && <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
+                                </div>
+                              </td>
                               <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">实习</span></td>
                               <td className="px-4 py-3 whitespace-nowrap"><span className="text-red-500 font-semibold">{job.salary_text || '面议'}</span></td>
                               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{job.location}</td>
@@ -347,6 +360,7 @@ export default function CampusPage() {
                               <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                               <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">实习</span>
+                                {isApplied(job.id) && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
                                 {job.location && <span>📍 {job.location}</span>}
                                 {job.education && <span>🎓 {job.education}</span>}
                                 <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded">{job.category}</span>
@@ -398,9 +412,12 @@ export default function CampusPage() {
                       <span className="font-medium text-gray-800 text-sm">{job.company}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link to={`/jobs/${job.id}`} className="text-primary-600 hover:text-primary-800 font-medium hover:underline">
-                        {job.title}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link to={`/jobs/${job.id}`} className="text-primary-600 hover:text-primary-800 font-medium hover:underline">
+                          {job.title}
+                        </Link>
+                        {isApplied(job.id) && <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {(() => { const n = getNature(job.experience); return <span className={`px-2 py-0.5 rounded text-xs font-medium ${n.color}`}>{n.label}</span>; })()}
@@ -450,6 +467,7 @@ export default function CampusPage() {
                     <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                     <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                       {(() => { const n = getNature(job.experience); return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${n.color}`}>{n.label}</span>; })()}
+                      {isApplied(job.id) && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
                       {job.location && <span>📍 {job.location}</span>}
                       {job.experience && <span>📋 {job.experience}</span>}
                       {job.education && <span>🎓 {job.education}</span>}

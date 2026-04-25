@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { useAppliedJobs } from '../hooks/useAppliedJobs';
 import { updateJobSearchParams } from './jobsSearchParams';
 
 export default function JobsPage() {
@@ -13,6 +14,7 @@ export default function JobsPage() {
   const [matchSummary, setMatchSummary] = useState(null);
   const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isApplied } = useAppliedJobs();
 
   const keyword = searchParams.get('keyword') || '';
   const location = searchParams.get('location') || '';
@@ -163,6 +165,7 @@ export default function JobsPage() {
                       <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                       <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500">
                         {(() => { const n = getNature(job.experience); return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${n.color}`}>{n.label}</span>; })()}
+                        {isApplied(job.id) && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
                         {job.match && <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${matchBadgeClass(job.match.level)}`}>匹配 {job.match.score}</span>}
                         {job.location && <span>📍 {job.location}</span>}
                         {job.experience && <span>📋 {job.experience}</span>}
@@ -229,6 +232,7 @@ export default function JobsPage() {
                             <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                             <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">校招</span>
+                              {isApplied(job.id) && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
                               {job.location && <span>📍 {job.location}</span>}
                               {job.education && <span>🎓 {job.education}</span>}
                             </div>
@@ -268,6 +272,7 @@ export default function JobsPage() {
                             <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                             <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">实习</span>
+                              {isApplied(job.id) && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已投递</span>}
                               {job.location && <span>📍 {job.location}</span>}
                               {job.education && <span>🎓 {job.education}</span>}
                             </div>

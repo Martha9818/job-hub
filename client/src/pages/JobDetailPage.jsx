@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { useAppliedJobs } from '../hooks/useAppliedJobs';
 
 export default function JobDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { markApplied, undoApplied, isApplied } = useAppliedJobs();
   const [job, setJob] = useState(null);
   const [relatedJobs, setRelatedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +32,7 @@ export default function JobDetailPage() {
     : job.match?.level === 'medium'
       ? 'bg-blue-50 text-blue-700 border-blue-200'
       : 'bg-gray-50 text-gray-600 border-gray-200';
+  const applied = isApplied(job.id);
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
@@ -128,17 +131,23 @@ export default function JobDetailPage() {
           {job.source_url && (
             <a href={job.source_url} target="_blank" rel="noopener noreferrer"
               className="btn-primary btn-lg rounded-xl text-center">
-              {job.source_url.includes('zhipin.com') ? '🔍 查看招聘搜索页' : '🏢 查看招聘页面'}
+              {job.source_url.includes('zhipin.com') ? '🔍 打开招聘搜索页' : '🏢 打开招聘页'}
             </a>
           )}
-          {job.source_url ? (
-            <a href={job.source_url} target="_blank" rel="noopener noreferrer"
-              className="btn-secondary btn-lg rounded-xl text-center">
-              🚀 立即投递
-            </a>
+          {applied ? (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button type="button" disabled className="btn-secondary btn-lg rounded-xl text-center text-green-700 bg-green-50 border-green-200">
+                ✅ 已投递
+              </button>
+              <button type="button" onClick={() => undoApplied(job.id)}
+                className="btn-secondary btn-lg rounded-xl text-center">
+                撤销
+              </button>
+            </div>
           ) : (
-            <button disabled className="btn-secondary btn-lg rounded-xl text-center opacity-50 cursor-not-allowed">
-              暂无投递链接
+            <button type="button" onClick={() => markApplied(job)}
+              className="btn-secondary btn-lg rounded-xl text-center">
+              🚀 标记已投递
             </button>
           )}
         </div>

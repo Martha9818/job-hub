@@ -29,7 +29,7 @@ const ROLES = [
 ];
 
 const EXPERIENCES = ['应届生', '实习', '1-3年', '3-5年', '5-10年'];
-const EDUCATIONS = ['本科及以上', '本科及以上', '大专及以上', '硕士及以上'];
+const EDUCATIONS = ['本科及以上'];
 const SOURCES = ['boss', 'zhilian', '51job', 'liepin', 'mechanical-cn'];
 
 function salaryFor(index, experience) {

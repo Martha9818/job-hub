@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../lib/api';
+import { useAppliedJobs } from '../hooks/useAppliedJobs';
 
 const STATUS_MAP = {
   pending: { label: '待处理', color: 'bg-yellow-100 text-yellow-700', icon: '⏳' },
@@ -13,6 +14,7 @@ const STATUS_MAP = {
 };
 
 export default function ApplicationsPage() {
+  const { localApplications } = useAppliedJobs();
   const [applications, setApplications] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,8 +33,17 @@ export default function ApplicationsPage() {
   useEffect(loadData, []);
 
   const filteredApps = filter
-    ? applications.filter(a => a.status === filter)
-    : applications;
+    ? [...localApplications, ...applications].filter(a => a.status === filter)
+    : [...localApplications, ...applications];
+
+  const displayStats = stats || {
+    total: 0,
+    success: 0,
+    pending: 0,
+    failed: 0,
+  };
+  displayStats.total = Math.max(displayStats.total || 0, applications.length) + localApplications.length;
+  displayStats.success = (displayStats.success || 0) + localApplications.length;
 
   if (loading) return <div className="text-center py-20 text-gray-400">加载中...</div>;
 
@@ -41,22 +52,22 @@ export default function ApplicationsPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">投递记录</h1>
 
       {/* 统计卡片 */}
-      {stats && (
+      {displayStats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="card p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="text-2xl font-bold text-gray-900">{displayStats.total}</div>
             <div className="text-xs text-gray-500">总投递</div>
           </div>
           <div className="card p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.success}</div>
-            <div className="text-xs text-gray-500">投递成功</div>
+            <div className="text-2xl font-bold text-green-600">{displayStats.success}</div>
+            <div className="text-xs text-gray-500">已投递</div>
           </div>
           <div className="card p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-yellow-600">{displayStats.pending || 0}</div>
             <div className="text-xs text-gray-500">处理中</div>
           </div>
           <div className="card p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+            <div className="text-2xl font-bold text-red-600">{displayStats.failed || 0}</div>
             <div className="text-xs text-gray-500">失败</div>
           </div>
         </div>
@@ -94,7 +105,7 @@ export default function ApplicationsPage() {
                   <h3 className="font-medium text-gray-900 truncate">{app.title}</h3>
                   <p className="text-sm text-gray-500 truncate">{app.company} · {app.location} · {app.salary_text || '面议'}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    简历: {app.resume_name} · {new Date(app.applied_at).toLocaleString()}
+                    {app.resume_name ? `简历: ${app.resume_name} · ` : ''}投递时间: {new Date(app.applied_at).toLocaleString()}
                   </p>
                   {app.error_message && (
                     <p className="text-xs text-red-500 mt-1">错误: {app.error_message}</p>

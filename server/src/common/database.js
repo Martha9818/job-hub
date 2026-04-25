@@ -262,7 +262,7 @@ async function initDatabase() {
 
   // === 数据迁移：学历要求统一为本科及以上 ===
   console.log('🎓 统一学历要求为本科及以上...');
-  run("UPDATE jobs SET education = '本科及以上' WHERE education IN ('高中', '大专', '本科', '硕士', '博士')");
+  run("UPDATE jobs SET education = '本科及以上' WHERE education IS NOT NULL");
   console.log('✅ 学历要求已更新');
 
   // === 数据迁移：source_url 统一为公司官网首页 ===
