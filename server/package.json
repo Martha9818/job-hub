@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "migrate": "node src/common/migrate.js"
+    "migrate": "node src/common/migrate.js",
+    "postinstall": "node scripts/build-client-if-present.js"
   },
   "dependencies": {
     "express": "^4.18.2",
