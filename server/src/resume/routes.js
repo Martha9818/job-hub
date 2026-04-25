@@ -5,6 +5,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { run, get, query } = require('../common/database');
 const { authenticate } = require('../auth/middleware');
+const { buildProfileFromText, normalizeProfile, parseProfileJson } = require('./profile');
 
 const router = express.Router();
 
@@ -59,8 +60,37 @@ router.post('/upload', authenticate, upload.single('resume'), (req, res, next) =
 // 获取简历列表
 router.get('/', authenticate, (req, res, next) => {
   try {
-    const resumes = query('SELECT id, filename, file_size, is_default, parse_status, created_at FROM resumes WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+    const resumes = query('SELECT id, filename, file_size, is_default, parse_status, parsed_data, created_at FROM resumes WHERE user_id = ? ORDER BY created_at DESC', [req.user.id])
+      .map(r => ({ ...r, profile: parseProfileJson(r.parsed_data), parsed_data: undefined }));
     res.json({ data: resumes });
+  } catch (err) { next(err); }
+});
+
+router.get('/:id/profile', authenticate, (req, res, next) => {
+  try {
+    const resume = get('SELECT id, filename, parse_status, parsed_data FROM resumes WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    if (!resume) return res.status(404).json({ code: 'NOT_FOUND', message: '简历未找到' });
+    res.json({ data: { id: resume.id, filename: resume.filename, parse_status: resume.parse_status, profile: parseProfileJson(resume.parsed_data) } });
+  } catch (err) { next(err); }
+});
+
+router.post('/:id/parse-text', authenticate, (req, res, next) => {
+  try {
+    const resume = get('SELECT id, parsed_data FROM resumes WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    if (!resume) return res.status(404).json({ code: 'NOT_FOUND', message: '简历未找到' });
+    const profile = buildProfileFromText(req.body?.text || '', parseProfileJson(resume.parsed_data));
+    run('UPDATE resumes SET parsed_data = ?, parse_status = ? WHERE id = ?', [JSON.stringify(profile), 'parsed', req.params.id]);
+    res.json({ message: '简历画像已解析', data: profile });
+  } catch (err) { next(err); }
+});
+
+router.put('/:id/profile', authenticate, (req, res, next) => {
+  try {
+    const resume = get('SELECT id FROM resumes WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    if (!resume) return res.status(404).json({ code: 'NOT_FOUND', message: '简历未找到' });
+    const profile = normalizeProfile(req.body || {});
+    run('UPDATE resumes SET parsed_data = ?, parse_status = ? WHERE id = ?', [JSON.stringify(profile), 'confirmed', req.params.id]);
+    res.json({ message: '简历画像已保存', data: profile });
   } catch (err) { next(err); }
 });
 

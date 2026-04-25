@@ -31,4 +31,17 @@ function authenticate(req, res, next) {
   }
 }
 
-module.exports = { generateToken, verifyToken, authenticate };
+function optionalAuthenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+
+  try {
+    const token = authHeader.split(' ')[1];
+    req.user = verifyToken(token);
+  } catch {
+    req.user = null;
+  }
+  next();
+}
+
+module.exports = { generateToken, verifyToken, authenticate, optionalAuthenticate };

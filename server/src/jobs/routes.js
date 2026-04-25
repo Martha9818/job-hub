@@ -1,8 +1,22 @@
 const express = require('express');
 const { query, get } = require('../common/database');
 const { jobSearchSchema } = require('../common/validation');
+const { optionalAuthenticate } = require('../auth/middleware');
+const { parseProfileJson } = require('../resume/profile');
+const { enrichJobsWithMatch, analyzeJobMatch } = require('./matching');
 
 const router = express.Router();
+
+function getResumeProfile(req, resumeId) {
+  if (!req.user?.id) return null;
+  const params = resumeId ? [resumeId, req.user.id] : [req.user.id];
+  const sql = resumeId
+    ? 'SELECT parsed_data FROM resumes WHERE id = ? AND user_id = ?'
+    : 'SELECT parsed_data FROM resumes WHERE user_id = ? ORDER BY is_default DESC, created_at DESC LIMIT 1';
+  const resume = get(sql, params);
+  if (!resume?.parsed_data) return null;
+  return parseProfileJson(resume.parsed_data);
+}
 
 // 手动触发数据迁移（管理员用）— 必须在 /:id 之前，用GET方便浏览器调用
 router.get('/migrate', (req, res) => {
@@ -113,9 +127,9 @@ router.get('/meta/stats', (req, res) => {
 });
 
 // 搜索岗位
-router.get('/', (req, res, next) => {
+router.get('/', optionalAuthenticate, (req, res, next) => {
   try {
-    const { keyword, location, category, industry, salary_min, salary_max, experience, education, nature, page = 1, page_size = 20, sort } = req.query;
+    const { keyword, location, category, industry, salary_min, salary_max, experience, education, nature, page = 1, page_size = 20, sort, match_mode = 'all', resume_id } = req.query;
 
     const conditions = ['j.is_active = 1'];
     const params = [];
@@ -140,27 +154,47 @@ router.get('/', (req, res, next) => {
     if (sort === 'salary_high') orderClause = 'ORDER BY j.salary_max DESC, j.salary_min DESC';
     if (sort === 'salary_low') orderClause = 'ORDER BY j.salary_min ASC, j.salary_max ASC';
 
-    const countResult = query(`SELECT COUNT(*) as total FROM jobs j ${whereClause}`, params);
-    const total = countResult[0]?.total || 0;
-
     const offset = (Number(page) - 1) * Number(page_size);
-    const jobs = query(
-      `SELECT j.*, s.name as source_name FROM jobs j LEFT JOIN sources s ON j.source_id = s.id ${whereClause} ${orderClause} LIMIT ? OFFSET ?`,
-      [...params, Number(page_size), offset]
-    );
+    const profile = getResumeProfile(req, resume_id);
+    const shouldMatch = profile || match_mode !== 'all';
+    const countResult = query(`SELECT COUNT(*) as total FROM jobs j ${whereClause}`, params);
+    const rawTotal = countResult[0]?.total || 0;
+
+    let jobs;
+    let matchSummary = null;
+    let total = rawTotal;
+
+    if (shouldMatch) {
+      const allJobs = query(
+        `SELECT j.*, s.name as source_name FROM jobs j LEFT JOIN sources s ON j.source_id = s.id ${whereClause} ${orderClause} LIMIT 300`,
+        params
+      );
+      const enriched = enrichJobsWithMatch(allJobs, profile || {}, match_mode);
+      total = enriched.items.length;
+      jobs = enriched.items.slice(offset, offset + Number(page_size));
+      matchSummary = enriched.summary;
+    } else {
+      jobs = query(
+        `SELECT j.*, s.name as source_name FROM jobs j LEFT JOIN sources s ON j.source_id = s.id ${whereClause} ${orderClause} LIMIT ? OFFSET ?`,
+        [...params, Number(page_size), offset]
+      );
+    }
 
     res.json({
       data: jobs,
+      match_summary: matchSummary,
       pagination: { page: Number(page), page_size: Number(page_size), total, total_pages: Math.ceil(total / Number(page_size)) },
     });
   } catch (err) { next(err); }
 });
 
 // 岗位详情 — 必须在所有具体路由之后
-router.get('/:id', (req, res, next) => {
+router.get('/:id', optionalAuthenticate, (req, res, next) => {
   try {
     const job = get(`SELECT j.*, s.name as source_name, s.website as source_website FROM jobs j LEFT JOIN sources s ON j.source_id = s.id WHERE j.id = ?`, [req.params.id]);
     if (!job) return res.status(404).json({ code: 'NOT_FOUND', message: '岗位未找到' });
+    const profile = getResumeProfile(req, req.query.resume_id);
+    if (profile) job.match = analyzeJobMatch(job, profile);
     res.json({ data: job });
   } catch (err) { next(err); }
 });

@@ -9,6 +9,7 @@ export default function JobsPage() {
   const [pagination, setPagination] = useState({ page: 1, total: 0, total_pages: 0 });
   const [filters, setFilters] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [matchSummary, setMatchSummary] = useState(null);
   const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -19,6 +20,7 @@ export default function JobsPage() {
   const nature = searchParams.get('nature') || '';
   const salaryMin = searchParams.get('salary_min') || '';
   const sort = searchParams.get('sort') || 'latest';
+  const matchMode = searchParams.get('match_mode') || 'smart';
   const page = parseInt(searchParams.get('page') || '1');
 
   useEffect(() => {
@@ -35,16 +37,18 @@ export default function JobsPage() {
     if (nature) params.set('nature', nature);
     if (salaryMin) params.set('salary_min', salaryMin);
     if (sort !== 'latest') params.set('sort', sort);
+    if (matchMode !== 'all') params.set('match_mode', matchMode);
     params.set('page', page);
 
     apiClient.get(`/jobs?${params.toString()}`)
       .then(res => {
         setJobs(res.data || []);
         setPagination(res.pagination || {});
+        setMatchSummary(res.match_summary || null);
       })
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));
-  }, [keyword, location, industry, category, nature, salaryMin, sort, page]);
+  }, [keyword, location, industry, category, nature, salaryMin, sort, matchMode, page]);
 
   // 岗位性质映射
   const getNature = (experience) => {
@@ -58,6 +62,12 @@ export default function JobsPage() {
     if (value) { params.set(key, value); } else { params.delete(key); }
     params.set('page', '1');
     setSearchParams(params);
+  };
+
+  const matchBadgeClass = (level) => {
+    if (level === 'high') return 'bg-green-100 text-green-700';
+    if (level === 'medium') return 'bg-blue-100 text-blue-700';
+    return 'bg-gray-100 text-gray-600';
   };
 
   return (
@@ -114,6 +124,24 @@ export default function JobsPage() {
             <option value="salary_low">薪资最低</option>
           </select>
         </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+          <span className="text-sm text-gray-500 mr-1">智能筛选：</span>
+          {[
+            ['all', '完整列表'],
+            ['smart', '智能排序'],
+            ['compact', '精简推荐'],
+          ].map(([value, label]) => (
+            <button key={value} onClick={() => updateSearch('match_mode', value)}
+              className={`btn-sm ${matchMode === value ? 'btn-primary' : 'btn-secondary'}`}>
+              {label}
+            </button>
+          ))}
+          {matchSummary && (
+            <span className="text-xs text-gray-500 ml-0 md:ml-2">
+              已识别 {matchSummary.duplicates} 个重复岗位，{matchSummary.low_quality} 个信息不完整岗位，当前显示 {matchSummary.shown} 个
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 结果列表 */}
@@ -137,11 +165,20 @@ export default function JobsPage() {
                       <p className="text-primary-600 font-medium text-sm mb-2">{job.company}</p>
                       <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500">
                         {(() => { const n = getNature(job.experience); return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${n.color}`}>{n.label}</span>; })()}
+                        {job.match && <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${matchBadgeClass(job.match.level)}`}>匹配 {job.match.score}</span>}
                         {job.location && <span>📍 {job.location}</span>}
                         {job.experience && <span>📋 {job.experience}</span>}
                         {job.education && <span>🎓 {job.education}</span>}
                         {job.industry && <span className="badge-primary">{job.industry}</span>}
                       </div>
+                      {job.match?.short_reasons?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {job.match.short_reasons.slice(0, 3).map(reason => (
+                            <span key={reason} className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">{reason}</span>
+                          ))}
+                          {job.match.duplicate?.is_duplicate && <span className="text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">疑似重复</span>}
+                        </div>
+                      )}
                     </div>
                     <div className="text-left md:text-right shrink-0">
                       <div className="text-lg font-bold text-red-500">{job.salary_text || '面议'}</div>

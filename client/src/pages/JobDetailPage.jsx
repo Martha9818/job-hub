@@ -27,6 +27,12 @@ export default function JobDetailPage() {
   if (loading) return <div className="text-center py-20 text-gray-400">加载中...</div>;
   if (!job) return <div className="empty-state"><div className="empty-state-icon">😕</div><p className="empty-state-text">岗位未找到</p></div>;
 
+  const matchLevelClass = job.match?.level === 'high'
+    ? 'bg-green-50 text-green-700 border-green-200'
+    : job.match?.level === 'medium'
+      ? 'bg-blue-50 text-blue-700 border-blue-200'
+      : 'bg-gray-50 text-gray-600 border-gray-200';
+
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       <div className="flex items-center gap-3 mb-6">
@@ -62,6 +68,42 @@ export default function JobDetailPage() {
           {job.job_type && <div><span className="text-gray-500 text-sm">💼 工作类型</span><div className="font-medium mt-0.5">{job.job_type}</div></div>}
           {job.publish_date && <div><span className="text-gray-500 text-sm">📅 发布日期</span><div className="font-medium mt-0.5">{job.publish_date}</div></div>}
         </div>
+
+        {job.match && (
+          <div className={`mb-8 rounded-xl border p-4 ${matchLevelClass}`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+              <div>
+                <h2 className="text-lg font-semibold">岗位匹配分析</h2>
+                <p className="text-sm opacity-80">基于默认简历画像生成，可在“我的简历”中调整标签</p>
+              </div>
+              <div className="text-2xl font-bold">匹配 {job.match.score}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-white/70 rounded-lg p-3">
+                <div className="font-medium mb-1">技能</div>
+                <p>{job.match.skills.matched.length ? `匹配：${job.match.skills.matched.join('、')}` : '暂无技能命中'}</p>
+                {job.match.skills.missing.length > 0 && <p className="opacity-70 mt-1">未命中：{job.match.skills.missing.slice(0, 5).join('、')}</p>}
+              </div>
+              <div className="bg-white/70 rounded-lg p-3">
+                <div className="font-medium mb-1">方向</div>
+                <p>{job.match.directions.matched.length ? `匹配：${job.match.directions.matched.join('、')}` : '暂无方向命中'}</p>
+                {job.match.directions.missing.length > 0 && <p className="opacity-70 mt-1">未命中：{job.match.directions.missing.slice(0, 5).join('、')}</p>}
+              </div>
+              <div className="bg-white/70 rounded-lg p-3">
+                <div className="font-medium mb-1">城市与学历</div>
+                <p>城市：{job.match.city.matched ? '匹配' : '未匹配'}{job.match.city.actual ? `（${job.match.city.actual}）` : ''}</p>
+                <p className="mt-1">学历：{job.match.education.matched ? '匹配' : '待确认'}{job.match.education.actual ? `（${job.match.education.actual}）` : ''}</p>
+              </div>
+              <div className="bg-white/70 rounded-lg p-3">
+                <div className="font-medium mb-1">质量与风险</div>
+                <p>信息完整度：{job.match.quality.score}</p>
+                {job.match.duplicate?.is_duplicate && <p className="mt-1">疑似重复岗位</p>}
+                {job.match.risks.length > 0 && <p className="mt-1">风险词：{job.match.risks.join('、')}</p>}
+                {job.match.risks.length === 0 && !job.match.duplicate?.is_duplicate && <p className="mt-1">未发现明显风险提示</p>}
+              </div>
+            </div>
+          </div>
+        )}
 
         {job.description && (
           <div className="mb-6">
