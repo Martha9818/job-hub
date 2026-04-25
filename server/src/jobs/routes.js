@@ -4,8 +4,17 @@ const { jobSearchSchema } = require('../common/validation');
 const { optionalAuthenticate } = require('../auth/middleware');
 const { parseProfileJson } = require('../resume/profile');
 const { enrichJobsWithMatch, analyzeJobMatch } = require('./matching');
+const { normalizeExternalUrl } = require('../common/url');
 
 const router = express.Router();
+
+function normalizeJobLink(job) {
+  if (!job) return job;
+  return {
+    ...job,
+    source_url: normalizeExternalUrl(job.source_url, { fallbackQuery: `${job.company || ''} ${job.title || ''}` }),
+  };
+}
 
 function getResumeProfile(req, resumeId) {
   if (!req.user?.id) return null;
@@ -181,7 +190,7 @@ router.get('/', optionalAuthenticate, (req, res, next) => {
     }
 
     res.json({
-      data: jobs,
+      data: jobs.map(normalizeJobLink),
       match_summary: matchSummary,
       pagination: { page: Number(page), page_size: Number(page_size), total, total_pages: Math.ceil(total / Number(page_size)) },
     });
@@ -195,7 +204,7 @@ router.get('/:id', optionalAuthenticate, (req, res, next) => {
     if (!job) return res.status(404).json({ code: 'NOT_FOUND', message: '岗位未找到' });
     const profile = getResumeProfile(req, req.query.resume_id);
     if (profile) job.match = analyzeJobMatch(job, profile);
-    res.json({ data: job });
+    res.json({ data: normalizeJobLink(job) });
   } catch (err) { next(err); }
 });
 

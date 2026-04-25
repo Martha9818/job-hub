@@ -6,6 +6,7 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 const { buildSupplementalJobs } = require('../jobs/supplemental-jobs');
+const { normalizeExternalUrl } = require('./url');
 
 const DB_PATH = process.env.DB_PATH || './data/jobhub.db';
 
@@ -337,10 +338,22 @@ async function initDatabase() {
   const supplementalJobs = buildSupplementalJobs();
   let supplementalCount = 0;
   for (const job of supplementalJobs) {
+    job[18] = normalizeExternalUrl(job[18], { fallbackQuery: `${job[4]} ${job[3]}` });
     const result = run(`INSERT OR IGNORE INTO jobs (id, source_id, source_job_id, title, company, salary_min, salary_max, salary_text, location, category, industry, experience, education, description, requirements, benefits, job_type, publish_date, source_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, job);
     supplementalCount += result.changes || 0;
   }
   console.log(`➕ 已补充 ${supplementalCount} 条机械岗位`);
+
+  const urlRows = query('SELECT id, company, title, source_url FROM jobs');
+  let normalizedUrlCount = 0;
+  for (const row of urlRows) {
+    const normalized = normalizeExternalUrl(row.source_url, { fallbackQuery: `${row.company} ${row.title}` });
+    if (normalized !== row.source_url) {
+      run('UPDATE jobs SET source_url = ? WHERE id = ?', [normalized, row.id]);
+      normalizedUrlCount++;
+    }
+  }
+  console.log(`🔗 已规范化 ${normalizedUrlCount} 条岗位链接`);
 
   // 扩展短描述
   const shortJobs = query("SELECT id, description, requirements, experience FROM jobs WHERE LENGTH(description) < 150");

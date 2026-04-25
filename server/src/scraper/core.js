@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const cheerio = require('cheerio');
 const https = require('https');
 const http = require('http');
+const { normalizeExternalUrl } = require('../common/url');
 
 const USER_AGENT = process.env.SCRAPER_USER_AGENT || 
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -87,7 +88,7 @@ async function scrapeGeneric(sourceConfig, keyword = '机械') {
       const location = $el.find(sels.location).text().trim();
       const link = $el.find(sels.link).attr('href') || '';
       if (title && company) {
-        jobs.push({ source_job_id: `${sourceId}_${i}_${Date.now()}`, title, company, salary_text: salary, location, source_url: link ? (link.startsWith('http') ? link : `${website}${link}`) : '', industry: '机械' });
+        jobs.push({ source_job_id: `${sourceId}_${i}_${Date.now()}`, title, company, salary_text: salary, location, source_url: normalizeExternalUrl(link, { baseUrl: website, fallbackQuery: `${company} ${title}` }), industry: '机械' });
       }
     });
     console.log(`[Scraper] ${name}: 解析到 ${jobs.length} 个岗位`);

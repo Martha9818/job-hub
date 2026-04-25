@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../lib/api';
 import { useAppliedJobs } from '../hooks/useAppliedJobs';
+import { buildApplicationViewModel } from './applicationStats';
 
 const STATUS_MAP = {
   pending: { label: '待处理', color: 'bg-yellow-100 text-yellow-700', icon: '⏳' },
@@ -32,18 +33,14 @@ export default function ApplicationsPage() {
 
   useEffect(loadData, []);
 
+  const { applications: mergedApplications, stats: displayStats } = buildApplicationViewModel({
+    localApplications,
+    remoteApplications: applications,
+    apiStats: stats,
+  });
   const filteredApps = filter
-    ? [...localApplications, ...applications].filter(a => a.status === filter)
-    : [...localApplications, ...applications];
-
-  const displayStats = stats || {
-    total: 0,
-    success: 0,
-    pending: 0,
-    failed: 0,
-  };
-  displayStats.total = Math.max(displayStats.total || 0, applications.length) + localApplications.length;
-  displayStats.success = (displayStats.success || 0) + localApplications.length;
+    ? mergedApplications.filter(a => a.status === filter)
+    : mergedApplications;
 
   if (loading) return <div className="text-center py-20 text-gray-400">加载中...</div>;
 

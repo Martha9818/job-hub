@@ -4,6 +4,7 @@ const { run, get, query } = require('../common/database');
 const { authenticate } = require('../auth/middleware');
 const { validate, applySchema } = require('../common/validation');
 const { executeAutoApply, getApplyTasks, getApplySteps } = require('./auto-apply');
+const { normalizeExternalUrl } = require('../common/url');
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post('/', authenticate, validate(applySchema), async (req, res, next) => 
       const job = get('SELECT id, title, company, source_url, source_id FROM jobs WHERE id = ? AND is_active = 1', [jobId]);
       if (!job) { results.push({ job_id: jobId, status: 'failed', error: '岗位不存在或已下线' }); continue; }
 
+      job.source_url = normalizeExternalUrl(job.source_url, { fallbackQuery: `${job.company} ${job.title}` });
       const existing = get('SELECT id FROM applications WHERE user_id = ? AND job_id = ?', [userId, jobId]);
       if (existing) { results.push({ job_id: jobId, status: 'skipped', error: '已投递过该岗位' }); continue; }
 
@@ -88,7 +90,10 @@ router.get('/', authenticate, (req, res, next) => {
     }
     sql += ' ORDER BY a.applied_at DESC';
 
-    const applications = query(sql, params);
+    const applications = query(sql, params).map(app => ({
+      ...app,
+      source_url: normalizeExternalUrl(app.source_url, { fallbackQuery: `${app.company || ''} ${app.title || ''}` }),
+    }));
     res.json({ data: applications });
   } catch (err) { next(err); }
 });
