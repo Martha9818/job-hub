@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/api';
-import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
 
 export default function JobDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [job, setJob] = useState(null);
   const [relatedJobs, setRelatedJobs] = useState([]);
@@ -130,17 +128,18 @@ export default function JobDetailPage() {
           {job.source_url && (
             <a href={job.source_url} target="_blank" rel="noopener noreferrer"
               className="btn-primary btn-lg rounded-xl text-center">
-              {job.source_url.includes('zhipin.com') ? '🔍 搜索该企业招聘信息' : '🏢 访问企业官网'}
+              {job.source_url.includes('zhipin.com') ? '🔍 查看招聘搜索页' : '🏢 查看招聘页面'}
             </a>
           )}
-          {user ? (
-            <Link to="/apply" className="btn-secondary btn-lg rounded-xl text-center">
+          {job.source_url ? (
+            <a href={job.source_url} target="_blank" rel="noopener noreferrer"
+              className="btn-secondary btn-lg rounded-xl text-center">
               🚀 立即投递
-            </Link>
+            </a>
           ) : (
-            <Link to="/login" className="btn-secondary btn-lg rounded-xl text-center">
-              登录后投递
-            </Link>
+            <button disabled className="btn-secondary btn-lg rounded-xl text-center opacity-50 cursor-not-allowed">
+              暂无投递链接
+            </button>
           )}
         </div>
 
