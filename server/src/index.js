@@ -24,6 +24,7 @@ if (fs.existsSync(envPath)) {
 
 const { initDatabase, query, saveDb } = require('./common/database');
 const { globalErrorHandler } = require('./common/errors');
+const { deriveJobUpdateStatus } = require('./jobs/update-status');
 const authRoutes = require('./auth/routes');
 const jobRoutes = require('./jobs/routes');
 const resumeRoutes = require('./resume/routes');
@@ -56,6 +57,20 @@ const uploadDir = process.env.UPLOAD_DIR || './uploads/resumes';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 // API 路由
+app.get('/api/jobs/meta/update-status', (req, res) => {
+  const latest = query(`
+    SELECT COALESCE(updated_at, crawled_at) AS last_updated_at
+    FROM jobs
+    WHERE is_active = 1
+    ORDER BY COALESCE(updated_at, crawled_at) DESC
+    LIMIT 1
+  `)[0];
+
+  res.json({
+    data: deriveJobUpdateStatus(latest?.last_updated_at || null),
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/resumes', resumeRoutes);
