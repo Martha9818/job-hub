@@ -5,6 +5,7 @@ const { optionalAuthenticate } = require('../auth/middleware');
 const { parseProfileJson } = require('../resume/profile');
 const { enrichJobsWithMatch, analyzeJobMatch } = require('./matching');
 const { normalizeExternalUrl } = require('../common/url');
+const { buildPresetSearchCondition } = require('./presets');
 
 const router = express.Router();
 
@@ -138,12 +139,19 @@ router.get('/meta/stats', (req, res) => {
 // 搜索岗位
 router.get('/', optionalAuthenticate, (req, res, next) => {
   try {
-    const { keyword, location, category, industry, salary_min, salary_max, experience, education, nature, page = 1, page_size = 20, sort, match_mode = 'all', resume_id } = req.query;
+    const { keyword, preset, location, category, industry, salary_min, salary_max, experience, education, nature, page = 1, page_size = 20, sort, match_mode = 'all', resume_id } = req.query;
 
     const conditions = ['j.is_active = 1'];
     const params = [];
 
     if (keyword) { conditions.push('(j.title LIKE ? OR j.company LIKE ? OR j.description LIKE ?)'); const kw = `%${keyword}%`; params.push(kw, kw, kw); }
+    if (preset) {
+      const presetCondition = buildPresetSearchCondition(preset);
+      if (presetCondition) {
+        conditions.push(presetCondition.sql);
+        params.push(...presetCondition.params);
+      }
+    }
     if (location) { conditions.push('j.location LIKE ?'); params.push(`%${location}%`); }
     if (category) { conditions.push('j.category = ?'); params.push(category); }
     if (industry) { conditions.push('j.industry LIKE ?'); params.push(`%${industry}%`); }

@@ -17,6 +17,7 @@ const loginSchema = z.object({
 // 岗位搜索验证
 const jobSearchSchema = z.object({
   keyword: z.string().optional(),
+  preset: z.enum(['state', 'tech']).optional(),
   location: z.string().optional(),
   category: z.string().optional(),
   industry: z.string().default('机械'),

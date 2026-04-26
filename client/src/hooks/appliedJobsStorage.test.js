@@ -1,20 +1,12 @@
-const assert = require('node:assert/strict');
-const { before, test } = require('node:test');
-
-let APPLIED_STATUS;
-let isJobApplied;
-let loadAppliedJobs;
-let markJobApplied;
-let undoJobApplied;
-
-before(async () => {
-  const storage = await import('./appliedJobsStorage.js');
-  APPLIED_STATUS = storage.APPLIED_STATUS;
-  isJobApplied = storage.isJobApplied;
-  loadAppliedJobs = storage.loadAppliedJobs;
-  markJobApplied = storage.markJobApplied;
-  undoJobApplied = storage.undoJobApplied;
-});
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import {
+  APPLIED_STATUS,
+  isJobApplied,
+  loadAppliedJobs,
+  markJobApplied,
+  undoJobApplied,
+} from './appliedJobsStorage.js';
 
 test('markJobApplied creates a stable local application record', () => {
   const now = '2026-04-25T10:00:00.000Z';

@@ -64,7 +64,7 @@ export default function JobDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 p-4 bg-gray-50 rounded-lg">
           {job.location && <div><span className="text-gray-500 text-sm">📍 工作地点</span><div className="font-medium mt-0.5">{job.location}</div></div>}
           {job.experience && <div><span className="text-gray-500 text-sm">📋 经验要求</span><div className="font-medium mt-0.5">{job.experience}</div></div>}
-          {job.education && <div><span className="text-gray-500 text-sm">🎓 学历要求</span><div className="font-medium mt-0.5">{job.education}</div></div>}
+          <div><span className="text-gray-500 text-sm">🎓 学历要求</span><div className="font-medium mt-0.5">本科及以上</div></div>
           {job.industry && <div><span className="text-gray-500 text-sm">🏭 所属行业</span><div className="font-medium mt-0.5">{job.industry}</div></div>}
           {job.job_type && <div><span className="text-gray-500 text-sm">💼 工作类型</span><div className="font-medium mt-0.5">{job.job_type}</div></div>}
           {job.publish_date && <div><span className="text-gray-500 text-sm">📅 发布日期</span><div className="font-medium mt-0.5">{job.publish_date}</div></div>}

@@ -1,6 +1,11 @@
 export const APPLIED_STORAGE_KEY = 'jobhub_applied_jobs';
 export const APPLIED_STATUS = 'applied';
 
+function normalizeJobId(jobId) {
+  if (jobId === null || jobId === undefined) return '';
+  return String(jobId);
+}
+
 function getStorage(storage) {
   if (storage) return storage;
   if (typeof localStorage !== 'undefined') return localStorage;
@@ -26,13 +31,15 @@ export function saveAppliedJobs(records, storage) {
 }
 
 export function isJobApplied(records, jobId) {
-  return records.some(record => record.job_id === jobId);
+  const targetId = normalizeJobId(jobId);
+  return records.some(record => normalizeJobId(record.job_id) === targetId);
 }
 
 export function markJobApplied(records, job, appliedAt = new Date().toISOString()) {
+  const normalizedJobId = normalizeJobId(job.id);
   const record = {
-    id: `local-${job.id}`,
-    job_id: job.id,
+    id: `local-${normalizedJobId}`,
+    job_id: normalizedJobId,
     title: job.title || '',
     company: job.company || '',
     location: job.location || '',
@@ -46,10 +53,11 @@ export function markJobApplied(records, job, appliedAt = new Date().toISOString(
 
   return [
     record,
-    ...records.filter(existing => existing.job_id !== job.id),
+    ...records.filter(existing => normalizeJobId(existing.job_id) !== normalizedJobId),
   ];
 }
 
 export function undoJobApplied(records, jobId) {
-  return records.filter(record => record.job_id !== jobId);
+  const targetId = normalizeJobId(jobId);
+  return records.filter(record => normalizeJobId(record.job_id) !== targetId);
 }

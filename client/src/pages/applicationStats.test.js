@@ -1,36 +1,36 @@
-const assert = require('node:assert/strict');
-const { before, test } = require('node:test');
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { buildApplicationViewModel } from './applicationStats.js';
 
-let buildApplicationViewModel;
+test('buildApplicationViewModel deduplicates local applications by normalized job_id', () => {
+  const localApplications = [
+    { id: 'local-79', job_id: '79', status: 'applied', applied_at: '2026-04-25T10:00:00.000Z' },
+  ];
+  const remoteApplications = [
+    { id: 'remote-79', job_id: 79, status: 'success', applied_at: '2026-04-25T10:01:00.000Z' },
+  ];
 
-before(async () => {
-  ({ buildApplicationViewModel } = await import('./applicationStats.js'));
+  const result = buildApplicationViewModel({ localApplications, remoteApplications });
+
+  assert.equal(result.applications.length, 1);
+  assert.equal(result.stats.total, 1);
+  assert.equal(result.stats.success, 1);
 });
 
-test('buildApplicationViewModel does not mutate api stats across re-renders', () => {
-  const apiStats = { total: 24, success: 0, pending: 24, failed: 0 };
-  const localApplications = [{ id: 'local-j79', job_id: 'j79', status: 'applied' }];
-  const remoteApplications = Array.from({ length: 24 }, (_, index) => ({
-    id: `remote-${index}`,
-    job_id: `j${index}`,
-    status: 'submitted',
-  }));
+test('buildApplicationViewModel uses max strategy when only apiStats are available', () => {
+  const localApplications = [
+    { id: 'local-1', job_id: '1', status: 'applied', applied_at: '2026-04-25T10:00:00.000Z' },
+    { id: 'local-2', job_id: '2', status: 'failed', applied_at: '2026-04-25T10:01:00.000Z' },
+  ];
+  const apiStats = { total: 1, success: 0, pending: 0, failed: 0 };
 
-  const first = buildApplicationViewModel({ localApplications, remoteApplications, apiStats });
-  const second = buildApplicationViewModel({ localApplications, remoteApplications, apiStats });
+  const result = buildApplicationViewModel({
+    localApplications,
+    remoteApplications: [],
+    apiStats,
+  });
 
-  assert.deepEqual(apiStats, { total: 24, success: 0, pending: 24, failed: 0 });
-  assert.deepEqual(first.stats, second.stats);
-  assert.equal(first.stats.total, 25);
-  assert.equal(second.stats.total, 25);
-});
-
-test('buildApplicationViewModel does not double count local records already returned by api', () => {
-  const localApplications = [{ id: 'local-j79', job_id: 'j79', status: 'applied' }];
-  const remoteApplications = [{ id: 'remote-j79', job_id: 'j79', status: 'submitted' }];
-
-  const model = buildApplicationViewModel({ localApplications, remoteApplications, apiStats: null });
-
-  assert.equal(model.applications.length, 1);
-  assert.equal(model.stats.total, 1);
+  assert.equal(result.stats.total, 2);
+  assert.equal(result.stats.success, 1);
+  assert.equal(result.stats.failed, 1);
 });

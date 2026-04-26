@@ -7,6 +7,8 @@ services:
     buildCommand: cd client && npm install --include=dev && npm run build && cd ../server && SKIP_CLIENT_BUILD=true npm install
     startCommand: cd server && node src/index.js
     envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
       - key: NODE_ENV
         value: production
       - key: ENABLE_SCHEDULER
