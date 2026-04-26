@@ -124,6 +124,7 @@ function analyzeJobMatch(job, profile = {}) {
 }
 
 function enrichJobsWithMatch(jobs = [], profile = {}, mode = 'smart') {
+  const hasProfileSignals = Boolean(profileToSearchText(profile).trim());
   const seen = new Map();
   const enriched = jobs.map((job) => {
     const match = analyzeJobMatch(job, profile);
@@ -143,12 +144,19 @@ function enrichJobsWithMatch(jobs = [], profile = {}, mode = 'smart') {
       });
 
   const filtered = mode === 'compact'
-    ? sorted.filter((job) => !job.match.duplicate.is_duplicate && job.match.quality.level !== 'low' && job.match.score >= 50)
+    ? sorted.filter((job) => {
+        if (job.match.duplicate.is_duplicate) return false;
+        if (job.match.quality.level === 'low') return false;
+        if (!hasProfileSignals) return true;
+        return job.match.score >= 50;
+      })
     : sorted;
 
   const duplicates = enriched.filter((job) => job.match.duplicate.is_duplicate).length;
   const lowQuality = enriched.filter((job) => job.match.quality.level === 'low').length;
-  const lowMatch = enriched.filter((job) => job.match.score < 50).length;
+  const lowMatch = hasProfileSignals
+    ? enriched.filter((job) => job.match.score < 50).length
+    : 0;
 
   return {
     items: filtered,

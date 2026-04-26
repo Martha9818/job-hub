@@ -60,9 +60,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="card p-5 md:p-6 mb-8 border border-primary-100 bg-gradient-to-r from-white to-primary-50/70">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="text-sm font-semibold text-primary-700 mb-1">{updateCard.intervalText}</div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">岗位数据更新节奏</h2>
+            <p className="text-sm text-gray-500 mt-1">时间按上海时区展示，以上次实际入库时间为基准推算下一次更新时间。</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-[280px]">
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+              <div className="text-xs text-gray-500 mb-1">上次更新时间</div>
+              <div className="text-base font-semibold text-gray-900">{updateCard.lastUpdatedText}</div>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+              <div className="text-xs text-gray-500 mb-1">下次预计更新时间</div>
+              <div className="text-base font-semibold text-gray-900">{updateCard.nextExpectedText}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {stats && (
         <>
-          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6">
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
             <div className="card p-5 md:p-6 text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary-600">{stats.totalJobs?.toLocaleString()}</div>
               <div className="text-gray-500 mt-1 text-sm md:text-base">在线岗位</div>
@@ -78,26 +98,6 @@ export default function HomePage() {
             <div className="card p-5 md:p-6 text-center">
               <div className="text-2xl md:text-3xl font-bold text-blue-500">{stats.todayJobs}</div>
               <div className="text-gray-500 mt-1 text-sm md:text-base">当前展示</div>
-            </div>
-          </section>
-
-          <section className="card p-5 md:p-6 mb-10 border border-primary-100 bg-gradient-to-r from-white to-primary-50/70">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <div className="text-sm font-semibold text-primary-700 mb-1">{updateCard.intervalText}</div>
-                <h2 className="text-lg md:text-xl font-bold text-gray-900">岗位数据更新节奏</h2>
-                <p className="text-sm text-gray-500 mt-1">时间按上海时区展示，以上次实际入库时间为基准推算下一次更新时间。</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-[280px]">
-                <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-                  <div className="text-xs text-gray-500 mb-1">上次更新时间</div>
-                  <div className="text-base font-semibold text-gray-900">{updateCard.lastUpdatedText}</div>
-                </div>
-                <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-                  <div className="text-xs text-gray-500 mb-1">下次预计更新时间</div>
-                  <div className="text-base font-semibold text-gray-900">{updateCard.nextExpectedText}</div>
-                </div>
-              </div>
             </div>
           </section>
         </>

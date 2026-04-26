@@ -105,3 +105,14 @@ test('enrichJobsWithMatch marks duplicate jobs and supports compact mode filteri
   assert.equal(compact.items.length, 1);
   assert.equal(compact.summary.hidden, 2);
 });
+
+test('compact mode still keeps quality jobs when profile is empty', () => {
+  const jobs = [
+    { id: '1', title: '机械设计工程师', company: '三一重工', location: '上海', salary_text: '10K-16K', description: '负责结构设计', requirements: '熟练使用 CAD' },
+    { id: '2', title: '设备维护工程师', company: '徐工集团', location: '徐州', salary_text: '9K-14K', description: '负责设备点检维护', requirements: '机械专业优先' },
+  ];
+
+  const compact = enrichJobsWithMatch(jobs, {}, 'compact');
+  assert.equal(compact.items.length, 2);
+  assert.equal(compact.summary.hidden, 0);
+});
